@@ -1,6 +1,6 @@
 all: gode
 	./$<
 
-gode: gode.go
-	go build $^
+gode: gode.go ide/ide.go ide/editor.go
+	go build $<
 
