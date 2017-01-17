@@ -91,27 +91,23 @@ func (ide *IDE) MakeMenu () {
 	// GtkMenuItem
 	//--------------------------------------------------------
 	ide.menubar = gtk.NewMenuBar ()
-	
-	{
-		cascademenu := gtk.NewMenuItemWithMnemonic("_File")
+	addCascade := func (label string, fill func (*gtk.Menu)) {
+		cascademenu := gtk.NewMenuItemWithMnemonic(label)
 		ide.menubar.Append(cascademenu)
 		submenu := gtk.NewMenu()
 		cascademenu.SetSubmenu(submenu)
-		
-		//var menuitem *gtk.MenuItem
+		fill (submenu)
+	}
+
+	addCascade ("_File", func (submenu *gtk.Menu) {
 		menuitem := gtk.NewMenuItemWithMnemonic("E_xit")
 		menuitem.Connect("activate", func() {
 			gtk.MainQuit()
 		})
 		submenu.Append(menuitem)
-	}
+	})
 
-	{
-		cascademenu := gtk.NewMenuItemWithMnemonic("_View")
-		ide.menubar.Append(cascademenu)
-		submenu := gtk.NewMenu()
-		cascademenu.SetSubmenu(submenu)
-
+	addCascade ("_View", func (submenu *gtk.Menu) {
 		menuitem := gtk.NewMenuItemWithMnemonic("_Font")
 		menuitem.Connect("activate", func() {
 			fsd := gtk.NewFontSelectionDialog("Font")
@@ -125,14 +121,9 @@ func (ide *IDE) MakeMenu () {
 			fsd.Run()
 		})
 		submenu.Append(menuitem)
-	}
+	})
 
-	{
-		cascademenu := gtk.NewMenuItemWithMnemonic("_Help")
-		ide.menubar.Append(cascademenu)
-		submenu := gtk.NewMenu()
-		cascademenu.SetSubmenu(submenu)
-
+	addCascade ("_Help", func (submenu *gtk.Menu) {
 		menuitem := gtk.NewMenuItemWithMnemonic("_About")
 		menuitem.Connect("activate", func() {
 			dialog := gtk.NewAboutDialog()
@@ -149,5 +140,5 @@ func (ide *IDE) MakeMenu () {
 			dialog.Destroy()
 		})
 		submenu.Append(menuitem)
-	}
+	})
 }
