@@ -11,25 +11,46 @@ import "github.com/kouzdra/go-analyzer/analyzer"
 type Editor struct {
 	ide *IDE
 	Sci *gsci.Scintilla
+	FName string
 }
 
 func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
-	return &Editor{ide, sci}
+	return &Editor{ide, sci, ""}
 }
 
-func (e *Editor) LoadFile (fname string) error {
-	text, err := ioutil.ReadFile (fname)
+func (e *Editor) LoadFile (fName string) error {
+	text, err := ioutil.ReadFile (fName)
 	if err == nil {
+		e.FName = fName
 		e.Sci.SetText (string (text))
 	}
 	return err
 }
 
+
+func (e *Editor) Fontify () {
+	if src, err := e.ide.Prj.GetSrc (e.FName); err == nil {
+		_, f := e.ide.Prj.Analyze (src, 0)
+		for _, m := range f.Markers {
+			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
+			
+			switch m.Color {
+			case analyzer.Keyword:
+				e.ide.Editor.Sci.Styling.Start (gsci.Pos (m.Beg))
+				e.ide.Editor.Sci.Styling.Set (uint (m.End-m.Beg), e.ide.RED)
+			}
+		}
+		
+	} else {
+		log.Printf ("anal.err %s", err)
+	}
+}
+
 func (e *Editor) LoadFileFromDialog () {
 	filechooserdialog := gtk.NewFileChooserDialog(
 		"Choose File...",
-		e.ide.window,
+		e.ide.Window,
 		gtk.FILE_CHOOSER_ACTION_OPEN,
 		gtk.STOCK_OK,
 		gtk.RESPONSE_ACCEPT)
@@ -39,25 +60,9 @@ func (e *Editor) LoadFileFromDialog () {
 	filechooserdialog.Response(func() {
 		fname := filechooserdialog.GetFilename()
 		fmt.Println(fname)
-		if err := e.ide.editor.LoadFile (fname); err != nil {
-			gtk.NewMessageDialog (e.ide.window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+		if err := e.ide.Editor.LoadFile (fname); err != nil {
+			gtk.NewMessageDialog (e.ide.Window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
 				"error loading file `%s': %s", fname, err)
-		} else {
-			if src, err := e.ide.prj.GetSrc (fname); err == nil {
-				_, f := e.ide.prj.Analyze (src, 0)
-				for _, m := range f.Markers {
-					//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
-					
-					switch m.Color {
-					case analyzer.Keyword:
-						e.ide.editor.Sci.Styling.Start (gsci.Pos (m.Beg))
-						e.ide.editor.Sci.Styling.Set (uint (m.End-m.Beg), e.ide.RED)
-					}
-				}
-				
-			} else {
-				log.Printf ("anal.err %s", err)
-			}
 		}
 		filechooserdialog.Destroy()
 	})

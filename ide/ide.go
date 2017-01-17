@@ -15,57 +15,52 @@ import (
 var _ = log.Printf
 
 type IDE struct {
-	window  *gtk .Window
-	editor  *Editor
-	menubar *gtk .MenuBar
+	Window  *gtk .Window
+	Editor  *Editor
+	Menubar *gtk .MenuBar
 	RED      gsci.Style
-	prj     *project.Project
+	Prj     *project.Project
 }
 
 func NewIDE () *IDE {
 	ide := &IDE{}
 	
-	ide.window = gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
-	ide.window.SetTitle("Editor")
-	ide.window.Connect("destroy", gtk.MainQuit)
+	ide.Window = gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
+	ide.Window.SetTitle("Editor")
+	ide.Window.Connect("destroy", gtk.MainQuit)
 
 	vbox := gtk.NewVBox(false, 1)
-	ide.editor = NewEditor(ide)
+	ide.Editor = NewEditor(ide)
 	ide.MakeMenu()
-	vbox.PackStart(ide.menubar, false, false, 0)
+	vbox.PackStart(ide.Menubar, false, false, 0)
 
 	swin := gtk.NewScrolledWindow(nil, nil)
 	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swin.SetShadowType(gtk.SHADOW_IN)
 	vbox.Add(swin)
 
-	swin.Add(ide.editor.Sci)
+	swin.Add(ide.Editor.Sci)
 
-	ide.window.Add(vbox)
-	ide.window.SetSizeRequest(1024, 800)
-	ide.window.ShowAll()
+	ide.Window.Add(vbox)
+	ide.Window.SetSizeRequest(1024, 800)
+	ide.Window.ShowAll()
 
-	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
-	window.SetTitle("Editor")
-	window.Connect("destroy", gtk.MainQuit)
-	
 	return ide
 }
 
 
 func (ide *IDE) LoadProject () {
  	log.Printf ("Project loading ...")
-	ide.prj = project.NewProject ()
-	ide.prj.SetRoot (os.ExpandEnv("$GOROOT"))
-	ide.prj.SetPath (os.ExpandEnv("$GOPATH"))
-	ide.prj.Load ()
-	log.Printf ("Project loaded: #Dirs: %d", len (ide.prj.Dirs))
+	ide.Prj = project.NewProject ()
+	ide.Prj.SetRoot (os.ExpandEnv("$GOROOT"))
+	ide.Prj.SetPath (os.ExpandEnv("$GOPATH"))
+	ide.Prj.Load ()
+	log.Printf ("Project loaded: #Dirs: %d", len (ide.Prj.Dirs))
 }
 
 func (ide *IDE) PreloadTest () {
 	ide.RED = gsci.Style (1)
-
-	s := ide.editor.Sci.Styling
+	s := ide.Editor.Sci.Styling
 	s.ResetDefault()
 	c := gdk.NewColor ("DarkSlateGray")
 	cc := c.Red () | (c.Green () << 8) | (c.Blue () << 16)
@@ -73,32 +68,14 @@ func (ide *IDE) PreloadTest () {
 	//s.SetBg (ide.RED, gsci.``Color (0x808080));
 	s.SetUnderline (ide.RED, false);
 	//s.SetFont (ide.RED, "Sans Bold Italic 10")
-
-	ide.editor.Sci.SetText(`#include <iostream>
-template<class T>
-struct foo_base {
-  T operator+(T const &rhs) const {
-    T tmp(static_cast<T const &>(*this));
-    tmp += rhs;
-    return tmp;
-  }
-};
-`)
-	s.GetAt (5)
-	s.Start (3)
-	s.Set (10, ide.RED)
-	log.Printf ("AT=%d\n", s.GetAt (5))
-	log.Printf ("AT=%d\n", ide.editor.Sci.GetCharAt (5))
-	s.GetEnd ()
-
 }
 
 func (ide *IDE) MakeMenu () {
 
-	ide.menubar = gtk.NewMenuBar ()
+	ide.Menubar = gtk.NewMenuBar ()
 	addCascade := func (label string, fill func (*gtk.Menu)) {
 		cascademenu := gtk.NewMenuItemWithMnemonic(label)
-		ide.menubar.Append(cascademenu)
+		ide.Menubar.Append(cascademenu)
 		submenu := gtk.NewMenu()
 		cascademenu.SetSubmenu(submenu)
 		fill (submenu)
@@ -111,7 +88,7 @@ func (ide *IDE) MakeMenu () {
 	
 	addCascade ("_File", func (submenu *gtk.Menu) {
 		submenu.Append(makeItem ("E_xit", gtk.MainQuit))
-		submenu.Append(makeItem ("_Open", ide.editor.LoadFileFromDialog))
+		submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
 	addCascade ("_View", func (submenu *gtk.Menu) {
@@ -119,11 +96,11 @@ func (ide *IDE) MakeMenu () {
 			fsd := gtk.NewFontSelectionDialog("Font")
 			fsd.Response(func() {
 				fmt.Println(fsd.GetFontName())
-				ide.editor.Sci.Styling.SetFont(ide.RED, fsd.GetFontName())
-				ide.editor.Sci.Styling.SetUnderline (ide.RED, true);
+				ide.Editor.Sci.Styling.SetFont(ide.RED, fsd.GetFontName())
+				ide.Editor.Sci.Styling.SetUnderline (ide.RED, true);
 				fsd.Destroy()
 			})
-			fsd.SetTransientFor(ide.window)
+			fsd.SetTransientFor(ide.Window)
 			fsd.Run()
 		}))
 	})
