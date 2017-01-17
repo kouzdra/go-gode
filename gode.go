@@ -6,6 +6,8 @@ import (
 	_ "github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
 	gsci "github.com/kouzdra/go-scintilla/gtk"
+	"github.com/kouzdra/go-analyzer/project"
+	"github.com/kouzdra/go-analyzer/analyzer"
 	"os"
 	"io/ioutil"
 	"fmt"
@@ -36,6 +38,7 @@ type IDE struct {
 	editor  *Editor
 	menubar *gtk .MenuBar
 	RED      gsci.Style
+	prj     *project.Project
 }
 
 func NewIDE () *IDE {
@@ -64,15 +67,25 @@ func NewIDE () *IDE {
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	window.SetTitle("Editor")
 	window.Connect("destroy", gtk.MainQuit)
-
+	
 	return ide
 }
 
+
+func (ide *IDE) LoadProject () {
+ 	log.Printf ("Project loading ...")
+	ide.prj = project.NewProject ()
+	ide.prj.SetRoot (os.ExpandEnv("$GOROOT"))
+	ide.prj.SetPath (os.ExpandEnv("$GOPATH"))
+	ide.prj.Load ()
+	log.Printf ("Project loaded: #Dirs: %d", len (ide.prj.Dirs))
+}
 
 func main() {
 	gtk.Init(&os.Args)
 	ide := NewIDE ()
 	ide.PreloadTest ()
+	ide.LoadProject ()
 	gtk.Main()
 }
 
@@ -139,6 +152,22 @@ func (ide *IDE) MakeMenu () {
 				if err := ide.editor.LoadFile (fname); err != nil {
 					gtk.NewMessageDialog (ide.window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
 						"error loading file `%s': %s", fname, err)
+				} else {
+					if src, err := ide.prj.GetSrc (fname); err == nil {
+						_, f := ide.prj.Analyze (src, 0)
+						for _, m := range f.Markers {
+							//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
+							
+							switch m.Color {
+							case analyzer.Keyword:
+								ide.editor.Sci.Styling.Start (gsci.Pos (m.Beg))
+								ide.editor.Sci.Styling.Set (uint (m.End-m.Beg), ide.RED)
+							}
+						}
+						
+					} else {
+						log.Printf ("anal.err %s", err)
+					}
 				}
 				filechooserdialog.Destroy()
 			})
