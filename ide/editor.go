@@ -37,8 +37,8 @@ func (e *Editor) Fontify () {
 			
 			switch m.Color {
 			case analyzer.Keyword:
-				e.ide.Editor.Sci.Styling.Start (gsci.Pos (m.Beg))
-				e.ide.Editor.Sci.Styling.Set (uint (m.End-m.Beg), e.ide.RED)
+				e.Sci.Styling.Start (gsci.Pos (m.Beg))
+				e.Sci.Styling.Set (uint (m.End-m.Beg), e.ide.RED)
 			}
 		}
 		
@@ -60,9 +60,11 @@ func (e *Editor) LoadFileFromDialog () {
 	filechooserdialog.Response(func() {
 		fname := filechooserdialog.GetFilename()
 		fmt.Println(fname)
-		if err := e.ide.Editor.LoadFile (fname); err != nil {
+		if err := e.LoadFile (fname); err != nil {
 			gtk.NewMessageDialog (e.ide.Window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
 				"error loading file `%s': %s", fname, err)
+		} else {
+			e.Fontify ()
 		}
 		filechooserdialog.Destroy()
 	})
