@@ -18,7 +18,14 @@ type Editor struct {
 func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
-	return &Editor{ide, sci, ""}
+	e := &Editor{ide, sci, ""}
+	sci.Handlers.OnModify = e.OnModify
+	return e
+}
+
+func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, linesAdded int, text string,
+	line uint, foldLevelNow uint, foldLevelPrev uint) {
+	log.Printf ("SCI INSERT: %d #%d (%s) lines=%d\n", pos, length, text, linesAdded);
 }
 
 func (e *Editor) LoadFile (fName string) error {
