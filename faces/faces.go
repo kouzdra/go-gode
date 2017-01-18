@@ -5,20 +5,35 @@ import "github.com/mattn/go-gtk/gdk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 
 type Face struct {
+	Id string
 	Style gsci.Style
 	Nm string
-	It bool
-	Bd bool
-	Ul bool
+	Flags uint
+}
+
+var Faces = make (map [string] *Face)
+
+const (
+	Bold      = 1 
+	Italic    = 2 
+	Underline = 4
+)
+
+func def (id string, nm string, flags uint) *Face {
+	f := &Face{Id: id, Style: gsci.Style (0), Nm: nm, Flags: flags}
+	Faces [id] = f
+	return f
 }
 
 var (
-	Operator   = &Face{Style: gsci.Style (64), Nm: "green", Bd: false, Ul: true}
-	Separator  = &Face{Style: gsci.Style (65), Nm: "blue" , Bd: false, Ul: true}
-	Keyword    = &Face{Style: gsci.Style (66), Nm: "DarkSlateGray", Bd: true, Ul: true}
+	Operator   = def ("Operator" , "green"  , Underline)
+	Separator  = def ("Separator", "magenta", Underline) 
+	Keyword    = def ("Keyword"  , "DarkSlateGray", Underline|Bold)
+	VarRef     = def ("Var"      , "cyan", Underline|Bold)
+	VarDef     = def ("VarDef"   , "cyan", Underline|Bold|Italic)
 	//Comment = "Comment"
 	//Token   = "Token"
-	Error  = &Face{Style: gsci.Style (67), Nm: "red", Bd: true, Ul: true}
+	//Error  = &Face{Style: gsci.Style (67), Nm: "red", Bd: true, Ul: true}
 	/*String  = "String"
 	Char    = "Char"
 	Number  = "Number"
@@ -33,16 +48,16 @@ var (
 	FunDef  = "MethDef"*/
 )
 
-func (f *Face) Init (sci * gsci.Scintilla) {
-	s := sci.Styling
-	c := gdk.NewColor (f.Nm)
-	s.SetFg (f.Style, gsci.Color (c.Red () | (c.Green () << 8) | (c.Blue () << 16)));
-	s.SetUnderline (f.Style, f.Ul);
-}
-
 func Init (sci * gsci.Scintilla) {
-	Operator .Init (sci)
-	Separator.Init (sci)
-	Keyword  .Init (sci)
-	Error    .Init (sci)
+	style := gsci.Style (64)
+	for _, f := range Faces {
+		f.Style = style
+		style = style + 1
+		s := sci.Styling
+		c := gdk.NewColor (f.Nm)
+		s.SetFg (f.Style, gsci.Color ((byte (c.Red ()) << 0) | (byte (c.Green ()) << 8) | (byte (c.Blue ()) << 16)));
+		s.SetUnderline (f.Style, (f.Flags & Underline) != 0);
+		s.SetItalic    (f.Style, (f.Flags & Italic   ) != 0);
+		s.SetBold      (f.Style, (f.Flags & Bold     ) != 0);
+	}
 }

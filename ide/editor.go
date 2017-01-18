@@ -6,7 +6,7 @@ import "io/ioutil"
 //import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
-import "github.com/kouzdra/go-analyzer/analyzer"
+//import "github.com/kouzdra/go-analyzer/analyzer"
 import "github.com/kouzdra/go-gode/faces"
 
 type Editor struct {
@@ -37,12 +37,15 @@ func (e *Editor) Fontify () {
 		for _, m := range f.Markers {
 			log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
 			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
-			switch m.Color {
+			if f := faces.Faces [m.Color]; f != nil {
+				e.Sci.Styling.Range (f.Style, bg, en)
+			}
+			/*switch m.Color {
 			case analyzer.Operator : e.Sci.Styling.Range (faces.Operator .Style, bg, en)
 			case analyzer.Separator: e.Sci.Styling.Range (faces.Separator.Style, bg, en)
 			case analyzer.Keyword  : e.Sci.Styling.Range (faces.Keyword  .Style, bg, en)
 			case analyzer.Error    : e.Sci.Styling.Range (faces.Error    .Style, bg, en)
-			}
+			}*/
 		}
 		
 	} else {
