@@ -25,27 +25,26 @@ func def (id string, nm string, flags uint) *Face {
 	return f
 }
 
-var (
-	Operator   = def ("Operator" , "green"  , Underline)
-	Separator  = def ("Separator", "magenta", Underline) 
-	Keyword    = def ("Keyword"  , "DarkSlateGray", Underline|Bold)
-	VarRef     = def ("Var"      , "cyan", Underline|Bold)
-	VarDef     = def ("VarDef"   , "cyan", Underline|Bold|Italic)
-	//Comment = "Comment"
-	//Token   = "Token"
-	//Error  = &Face{Style: gsci.Style (67), Nm: "red", Bd: true, Ul: true}
-	/*String  = "String"
-	Char    = "Char"
-	Number  = "Number"
+const DefaultFont = "Serif"
 
-	VarRef  = "Var"
-	VarDef  = "VarDef"
-	ConRef  = "Con"
-	ConDef  = "ConDef"
-	TypRef  = "Type"
-	TypDef  = "TypeDef"
-	FunRef  = "Meth"
-	FunDef  = "MethDef"*/
+var (
+	Operator   = def ("Operator" , "green"  , 0)
+	Separator  = def ("Separator", "royal blue", 0) 
+	Keyword    = def ("Keyword"  , "royal blue", Underline|Bold)
+	VarRef     = def ("Var"      , "magenta", Bold)
+	VarDef     = def ("VarDef"   , "magenta", Bold|Italic)
+	TypRef     = def ("Type"     , "light sky blue", Bold)
+	TypDef     = def ("TypeDef"  , "light sky blue", Bold|Italic)
+	FunRef     = def ("Meth"     , "olive drab", Bold)
+	FunDef     = def ("MethDef"  , "olive drab", Bold|Italic)
+	ConRef     = def ("Meth"     , "lawn green", Bold)
+	ConDef     = def ("MethDef"  , "lawn green", Bold|Italic)
+	Comment    = def ("Comment"  , "gray", 0)
+	Token      = def ("Token"    , "dark goldenrod", 0)
+	Error      = def ("Error"  , "red", Underline)
+	String     = def ("String" , "medium blue", 0)
+	Char       = def ("Char"   , "medium blue", 0)
+	Number     = def ("Number" , "blue", 0)
 )
 
 func Init (sci * gsci.Scintilla) {
@@ -55,7 +54,9 @@ func Init (sci * gsci.Scintilla) {
 		style = style + 1
 		s := sci.Styling
 		c := gdk.NewColor (f.Nm)
-		s.SetFg (f.Style, gsci.Color ((byte (c.Red ()) << 0) | (byte (c.Green ()) << 8) | (byte (c.Blue ()) << 16)));
+		mk := func (u uint16) uint32 { return uint32 (u >> 8) }
+		s.SetFont (f.Style, DefaultFont)
+		s.SetFg (f.Style, gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)));
 		s.SetUnderline (f.Style, (f.Flags & Underline) != 0);
 		s.SetItalic    (f.Style, (f.Flags & Italic   ) != 0);
 		s.SetBold      (f.Style, (f.Flags & Bold     ) != 0);
