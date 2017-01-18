@@ -7,6 +7,7 @@ import "io/ioutil"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import "github.com/kouzdra/go-analyzer/analyzer"
+import "github.com/kouzdra/go-gode/faces"
 
 type Editor struct {
 	ide *IDE
@@ -16,6 +17,7 @@ type Editor struct {
 
 func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
+	faces.Init (sci)
 	return &Editor{ide, sci, ""}
 }
 
@@ -33,12 +35,13 @@ func (e *Editor) Fontify () {
 	if src, err := e.ide.Prj.GetSrc (e.FName); err == nil {
 		_, f := e.ide.Prj.Analyze (src, 0)
 		for _, m := range f.Markers {
-			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
-			
+			log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
+			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
 			switch m.Color {
-			case analyzer.Keyword:
-				e.Sci.Styling.Start (gsci.Pos (m.Beg))
-				e.Sci.Styling.Set (uint (m.End-m.Beg), e.ide.RED)
+			case analyzer.Operator : e.Sci.Styling.Range (faces.Operator .Style, bg, en)
+			case analyzer.Separator: e.Sci.Styling.Range (faces.Separator.Style, bg, en)
+			case analyzer.Keyword  : e.Sci.Styling.Range (faces.Keyword  .Style, bg, en)
+			case analyzer.Error    : e.Sci.Styling.Range (faces.Error    .Style, bg, en)
 			}
 		}
 		

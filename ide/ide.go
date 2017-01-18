@@ -2,9 +2,9 @@ package ide
 
 import (
 	"log"
-	_ "github.com/mattn/go-gtk/gdkpixbuf"
-	_ "github.com/mattn/go-gtk/glib"
-	"github.com/mattn/go-gtk/gdk"
+	//"github.com/mattn/go-gtk/gdkpixbuf"
+	//"github.com/mattn/go-gtk/glib"
+	//"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 	gsci "github.com/kouzdra/go-scintilla/gtk"
 	"github.com/kouzdra/go-analyzer/project"
@@ -56,18 +56,6 @@ func (ide *IDE) LoadProject () {
 	ide.Prj.SetPath (os.ExpandEnv("$GOPATH"))
 	ide.Prj.Load ()
 	log.Printf ("Project loaded: #Dirs: %d", len (ide.Prj.Dirs))
-}
-
-func (ide *IDE) PreloadTest () {
-	ide.RED = gsci.Style (1)
-	s := ide.Editor.Sci.Styling
-	s.ResetDefault()
-	c := gdk.NewColor ("DarkSlateGray")
-	cc := c.Red () | (c.Green () << 8) | (c.Blue () << 16)
-	s.SetFg (ide.RED, gsci.Color (cc));
-	//s.SetBg (ide.RED, gsci.``Color (0x808080));
-	s.SetUnderline (ide.RED, false);
-	//s.SetFont (ide.RED, "Sans Bold Italic 10")
 }
 
 func (ide *IDE) MakeMenu () {
