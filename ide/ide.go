@@ -2,12 +2,13 @@ package ide
 
 import (
 	"log"
-	//"github.com/mattn/go-gtk/gdkpixbuf"
-	//"github.com/mattn/go-gtk/glib"
+	"github.com/mattn/go-gtk/gdkpixbuf"
+	"github.com/mattn/go-gtk/glib"
 	//"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 	gsci "github.com/kouzdra/go-scintilla/gtk"
 	"github.com/kouzdra/go-analyzer/project"
+	"strconv"
 	"os"
 	"fmt"
 )
@@ -29,15 +30,22 @@ func NewIDE () *IDE {
 	ide.Window.SetTitle("Editor")
 	ide.Window.Connect("destroy", gtk.MainQuit)
 
-	vbox := gtk.NewVBox(false, 1)
 	ide.Editor = NewEditor(ide)
 	ide.MakeMenu()
+
+	vbox := gtk.NewVBox(false, 1)
 	vbox.PackStart(ide.Menubar, false, false, 0)
+
+	hpaned := gtk.NewHPaned()
+	vbox.Add(hpaned)
 
 	swin := gtk.NewScrolledWindow(nil, nil)
 	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swin.SetShadowType(gtk.SHADOW_IN)
-	vbox.Add(swin)
+
+	treeView, _ := ide.MakeTree ()
+	hpaned.Add1 (treeView)
+	hpaned.Add2(swin)
 
 	swin.Add(ide.Editor.Sci)
 
@@ -48,7 +56,49 @@ func NewIDE () *IDE {
 	return ide
 }
 
+func (ide *IDE) MakeTree () (*gtk.TreeView, *gtk.TreeStore) {
+	store := gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING)
+	treeview := gtk.NewTreeView()
+	model := store.ToTreeModel()
+	treeview.SetModel(model)
 
+	treeview.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", 0))
+	treeview.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text", gtk.NewCellRendererText(), "text", 1))
+
+	for n := 1; n <= 10; n++ {
+		var iter1, iter2, iter3 gtk.TreeIter
+		store.Append(&iter1, nil)
+		store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "Folder"+strconv.Itoa(n))
+		store.Append(&iter2, &iter1)
+		store.Set(&iter2, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "SubFolder"+strconv.Itoa(n))
+		store.Append(&iter3, &iter2)
+		store.Set(&iter3, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "File"+strconv.Itoa(n))
+	}
+
+	treeview.Connect("row_activated", func() {
+		var path *gtk.TreePath
+		var column *gtk.TreeViewColumn
+		treeview.GetCursor(&path, &column)
+		mes := "TreePath is: " + path.String()
+		dialog := gtk.NewMessageDialog(
+			treeview.GetTopLevelAsWindow(),
+			gtk.DIALOG_MODAL,
+			gtk.MESSAGE_INFO,
+			gtk.BUTTONS_OK,
+			mes)
+		dialog.SetTitle("TreePath")
+		dialog.Response(func() {
+			dialog.Destroy()
+		})
+		dialog.Run()
+	})
+	return treeview, store
+}
+
+	
 func (ide *IDE) LoadProject () {
  	log.Printf ("Project loading ...")
 	ide.Prj = project.NewProject ()
