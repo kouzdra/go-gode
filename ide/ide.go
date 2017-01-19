@@ -16,13 +16,14 @@ import (
 var _ = log.Printf
 
 type IDE struct {
-	Window  *gtk .Window
-	Editor  *Editor
-	Menubar *gtk .MenuBar
-	RED      gsci.Style
-	Prj     *project.Project
-	View    *gtk.TreeView
-	Store   *gtk.TreeStore
+	Window    *gtk .Window
+	Editor    *Editor
+	Menubar   *gtk .MenuBar
+	StatusBar *gtk .Statusbar
+	RED        gsci.Style
+	Prj       *project.Project
+	View      *gtk.TreeView
+	Store     *gtk.TreeStore
 }
 
 func NewIDE () *IDE {
@@ -41,17 +42,31 @@ func NewIDE () *IDE {
 	hpaned := gtk.NewHPaned()
 	vbox.Add(hpaned)
 
-	swin := gtk.NewScrolledWindow(nil, nil)
-	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	swin.SetShadowType(gtk.SHADOW_IN)
+	swinE := gtk.NewScrolledWindow(nil, nil)
+	swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+	swinE.SetShadowType(gtk.SHADOW_IN)
 
 	ide.MakeTree ()
-	hpaned.Add1 (ide.View)
-	hpaned.Add2 (swin)
+	swinT := gtk.NewScrolledWindow(nil, nil)
+	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+	swinT.SetShadowType(gtk.SHADOW_NONE)
+	notebook := gtk.NewNotebook()
+	hpaned.Add1 (swinT)
+	hpaned.Add2 (notebook)
 	hpaned.SetPosition (256)
 
-	swin.Add(ide.Editor.Sci)
+	swinT.Add (ide.View)
+	swinE.Add(ide.Editor.Sci)
 
+	notebook.AppendPage(swinE, gtk.NewLabel("fileName"))
+	
+	ide.StatusBar = gtk.NewStatusbar()
+	context_id := ide.StatusBar.GetContextId("go-gode")
+	ide.StatusBar.Push(context_id, "Go Dev.Env.")
+
+	vbox.PackStart(ide.StatusBar, false, false, 0)
+
+	
 	ide.Window.Add(vbox)
 	ide.Window.SetSizeRequest(1024, 800)
 	ide.Window.ShowAll()
@@ -77,14 +92,13 @@ func (ide *IDE) LoadView () {
 	sort.Sort (Pkgs (pkgs))
 
 	for _, pkg := range pkgs {
-		log.Printf ("path=%s #srcs=%d\n", pkg.Dir + "+" + pkg.Name, len (pkg.Srcs))
-		
+		//log.Printf ("path=%s #srcs=%d\n", pkg.Dir + "+" + pkg.Name, len (pkg.Srcs))
 		var iter1 gtk.TreeIter
 		ide.Store.Append(&iter1, &iter0)
 		ide.Store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
 			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, pkg.Dir)
 		for sPath, _ := range pkg.Srcs {
-			log.Printf ("   src=%s\n", sPath)
+			//log.Printf ("   src=%s\n", sPath)
 			var iter2 gtk.TreeIter
 			ide.Store.Append(&iter2, &iter1)
 			ide.Store.Set(&iter2, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
