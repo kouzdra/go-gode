@@ -41,7 +41,7 @@ var (
 	ConDef     = def ("MethDef"  , "lawn green", Bold|Italic)
 	Comment    = def ("Comment"  , "gray", 0)
 	Token      = def ("Token"    , "dark goldenrod", 0)
-	Error      = def ("Error"  , "red", Underline)
+	Error      = def ("Error"  , "red", Bold)
 	String     = def ("String" , "medium blue", 0)
 	Char       = def ("Char"   , "medium blue", 0)
 	Number     = def ("Number" , "blue", 0)
@@ -56,9 +56,9 @@ func Init (sci * gsci.Scintilla) {
 		c := gdk.NewColor (f.Nm)
 		mk := func (u uint16) uint32 { return uint32 (u >> 8) }
 		s.SetFont (f.Style, DefaultFont)
-		s.SetFg (f.Style, gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)));
-		s.SetUnderline (f.Style, (f.Flags & Underline) != 0);
-		s.SetItalic    (f.Style, (f.Flags & Italic   ) != 0);
-		s.SetBold      (f.Style, (f.Flags & Bold     ) != 0);
+		s.SetFg (f.Style, gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)))
+		s.SetUnderline (f.Style, (f.Flags & Underline) != 0)
+		s.SetItalic    (f.Style, (f.Flags & Italic   ) != 0)
+		s.SetBold      (f.Style, (f.Flags & Bold     ) != 0)
 	}
 }

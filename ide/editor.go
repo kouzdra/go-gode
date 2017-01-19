@@ -3,13 +3,16 @@ package ide
 import "fmt"
 import "log"
 import "io/ioutil"
-//import "github.com/mattn/go-gtk/gdk"
+import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import consts "github.com/kouzdra/go-scintilla/gtk/consts"
 import "github.com/kouzdra/go-analyzer/project"
 //import "github.com/kouzdra/go-analyzer/analyzer"
 import "github.com/kouzdra/go-gode/faces"
+
+type Indic uint
+const INDIC_ERROR Indic = consts.INDIC_CONTAINER
 
 type Editor struct {
 	ide *IDE
@@ -23,9 +26,19 @@ func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
 	e := &Editor{ide:ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
+	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
+	e.InitIndic ()
 	sci.Handlers.OnModify = e.OnModify
 	log.Printf ("Editor created\n")
 	return e
+}
+
+func (e *Editor) InitIndic () {
+	e.Sci.Indic.SetStyle (uint (INDIC_ERROR), consts.INDIC_COMPOSITIONTHICK/*SQUIGGLEPIXMAP*/)
+	c := gdk.NewColor  ("red")
+	mk := func (u uint16) uint32 { return uint32 (u >> 8) }
+	e.Sci.Indic.SetFg (uint (INDIC_ERROR),
+		gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)))
 }
 
 func (e *Editor) DoLock (actions func ()) {
@@ -55,12 +68,8 @@ func (e *Editor) LoadFile (fName string) error {
 		e.DoLock (func () {
 			e.Src = src
 			text := src.Text ()
-			log.Printf ("Editor load-0 text#=%d\n", len (text))
-			log.Printf ("Editor load-1 text#=%d\n", len (e.Src.Text ()))
 			e.Sci.SetText (text)
-			log.Printf ("Editor load-2 text#=%d\n", len (e.Src.Text ()))
 			e.Src.SetText (text) // to block INSERT MESSAGE
-			log.Printf ("Editor load-3 text#=%d\n", len (e.Src.Text ()))
 		})
 		return nil
 	} else {
@@ -79,6 +88,7 @@ func (e *Editor) Fontify () {
 		es, f := e.ide.Prj.Analyze (src, 0)
 		log.Printf ("Fontify  %s", e.FName)
 		e.Sci.Styling.Clear ()
+		e.Sci.Indic  .ClearIndic (uint (INDIC_ERROR))
 		for _, m := range f.Markers {
 			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
 			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
@@ -88,6 +98,7 @@ func (e *Editor) Fontify () {
 		}
 		for _, err := range es.Errors {
 			log.Printf ("  %s %s at %d:%d\n", err.Lvl, err.Msg, err.Beg, err.End)
+			e.Sci.Indic.SetRange (uint (INDIC_ERROR), gsci.Pos (err.Beg), gsci.Pos (err.End))
 		}
 		
 	} else {
