@@ -6,11 +6,14 @@ import "io/ioutil"
 //import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
+import consts "github.com/kouzdra/go-scintilla/gtk/consts"
+import "github.com/kouzdra/go-analyzer/project"
 //import "github.com/kouzdra/go-analyzer/analyzer"
 import "github.com/kouzdra/go-gode/faces"
 
 type Editor struct {
 	ide *IDE
+	Src *project.Src
 	Sci *gsci.Scintilla
 	FName string
 }
@@ -18,41 +21,57 @@ type Editor struct {
 func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
-	e := &Editor{ide, sci, ""}
+	e := &Editor{ide:ide, Src:nil, Sci:sci, FName:""}
 	sci.Handlers.OnModify = e.OnModify
 	return e
 }
 
 func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, linesAdded int, text string,
 	line uint, foldLevelNow uint, foldLevelPrev uint) {
-	log.Printf ("SCI INSERT: %d #%d (%s) lines=%d\n", pos, length, text, linesAdded);
+		if e.Src != nil {
+			if ((notificationType & consts.SC_MOD_INSERTTEXT) != 0) {
+				log.Printf ("SCI INSERT: %x %d #%d (%s) lines=%d\n", notificationType, pos, length, text, linesAdded);
+				e.Src.Changed (int (pos), int (pos), text)
+			} else if ((notificationType & consts.SC_MOD_DELETETEXT) != 0) {
+				log.Printf ("SCI DELETE: %x %d #%d (%s) lines=%d\n", notificationType, pos, length, text, linesAdded);
+				e.Src.Changed (int (pos), int (pos)+int (length), "")
+			}
+			e.Fontify ()
+		}
 }
 
 func (e *Editor) LoadFile (fName string) error {
-	text, err := ioutil.ReadFile (fName)
-	if err == nil {
-		e.FName = fName
-		e.Sci.SetText (string (text))
+	e.FName = fName
+	if src, err := e.ide.Prj.GetSrc (fName); err == nil {
+		e.Src   = src
+		text := src.Text ()
+		e.Src.Reload () // to block INSERT MESSAGE
+		e.Sci.SetText (text)
+		return nil
+	} else {
+		text, err := ioutil.ReadFile (fName)
+		e.Src = nil
+		if err == nil {
+			e.Sci.SetText (string (text))
+		}
+		return err
 	}
-	return err
 }
 
 
 func (e *Editor) Fontify () {
 	if src, err := e.ide.Prj.GetSrc (e.FName); err == nil {
-		_, f := e.ide.Prj.Analyze (src, 0)
+		es, f := e.ide.Prj.Analyze (src, 0)
+		log.Printf ("Fontify  %s", e.FName)
 		for _, m := range f.Markers {
-			log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
+			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
 			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
 			if f := faces.Faces [m.Color]; f != nil {
 				e.Sci.Styling.Range (f.Style, bg, en)
 			}
-			/*switch m.Color {
-			case analyzer.Operator : e.Sci.Styling.Range (faces.Operator .Style, bg, en)
-			case analyzer.Separator: e.Sci.Styling.Range (faces.Separator.Style, bg, en)
-			case analyzer.Keyword  : e.Sci.Styling.Range (faces.Keyword  .Style, bg, en)
-			case analyzer.Error    : e.Sci.Styling.Range (faces.Error    .Style, bg, en)
-			}*/
+		}
+		for _, err := range es.Errors {
+			log.Printf ("  %s %s at %d:%d\n", err.Lvl, err.Msg, err.Beg, err.End)
 		}
 		
 	} else {
