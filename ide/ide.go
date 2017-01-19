@@ -10,6 +10,7 @@ import (
 	"github.com/kouzdra/go-analyzer/project"
 	"os"
 	"fmt"
+	"sort"
 )
 
 var _ = log.Printf
@@ -58,18 +59,30 @@ func NewIDE () *IDE {
 	return ide
 }
 
+type Pkgs []*project.Pkg
+func (p Pkgs) Len  () int { return len (p) }
+func (p Pkgs) Swap (i, j int) { p [i], p [j] = p [j], p [i] }
+func (p Pkgs) Less (i, j int) bool { return p [i].Dir < p [j].Dir }
+
 func (ide *IDE) LoadView () {
 	var iter0 gtk.TreeIter
 	ide.Store.Append(&iter0, nil)
 	ide.Store.Set(&iter0, gtk.NewImage().RenderIcon(gtk.STOCK_FLOPPY,
 		gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "GO.PATH")
-	for path, pkg := range ide.Prj.Pkgs {
-		log.Printf ("path=%s #srcs=%d\n", path, len (pkg.Srcs))
+
+	pkgs := make ([]*project.Pkg, 0, len (ide.Prj.Pkgs))
+	for _, pkg := range ide.Prj.Pkgs {
+		pkgs = append (pkgs, pkg)
+	}
+	sort.Sort (Pkgs (pkgs))
+
+	for _, pkg := range pkgs {
+		log.Printf ("path=%s #srcs=%d\n", pkg.Dir + "+" + pkg.Name, len (pkg.Srcs))
 		
 		var iter1 gtk.TreeIter
 		ide.Store.Append(&iter1, &iter0)
 		ide.Store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
-			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, path)
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, pkg.Dir)
 		for sPath, _ := range pkg.Srcs {
 			log.Printf ("   src=%s\n", sPath)
 			var iter2 gtk.TreeIter
