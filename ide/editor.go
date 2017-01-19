@@ -16,37 +16,52 @@ type Editor struct {
 	Src *project.Src
 	Sci *gsci.Scintilla
 	FName string
+	lockCount int
 }
 
 func NewEditor (ide *IDE) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
-	e := &Editor{ide:ide, Src:nil, Sci:sci, FName:""}
+	e := &Editor{ide:ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
 	sci.Handlers.OnModify = e.OnModify
+	log.Printf ("Editor created\n")
 	return e
+}
+
+func (e *Editor) DoLock (actions func ()) {
+	e.lockCount ++
+	defer func () { e.lockCount -- } ()
+	actions ()
 }
 
 func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, linesAdded int, text string,
 	line uint, foldLevelNow uint, foldLevelPrev uint) {
-		if e.Src != nil {
+		if e.lockCount == 0 && e.Src != nil {
 			if ((notificationType & consts.SC_MOD_INSERTTEXT) != 0) {
 				log.Printf ("SCI INSERT: %x %d #%d (%s) lines=%d\n", notificationType, pos, length, text, linesAdded);
 				e.Src.Changed (int (pos), int (pos), text)
+				e.Fontify ()
 			} else if ((notificationType & consts.SC_MOD_DELETETEXT) != 0) {
 				log.Printf ("SCI DELETE: %x %d #%d (%s) lines=%d\n", notificationType, pos, length, text, linesAdded);
 				e.Src.Changed (int (pos), int (pos)+int (length), "")
+				e.Fontify ()
 			}
-			e.Fontify ()
 		}
 }
 
 func (e *Editor) LoadFile (fName string) error {
 	e.FName = fName
 	if src, err := e.ide.Prj.GetSrc (fName); err == nil {
-		e.Src   = src
-		text := src.Text ()
-		e.Src.Reload () // to block INSERT MESSAGE
-		e.Sci.SetText (text)
+		e.DoLock (func () {
+			e.Src = src
+			text := src.Text ()
+			log.Printf ("Editor load-0 text#=%d\n", len (text))
+			log.Printf ("Editor load-1 text#=%d\n", len (e.Src.Text ()))
+			e.Sci.SetText (text)
+			log.Printf ("Editor load-2 text#=%d\n", len (e.Src.Text ()))
+			e.Src.SetText (text) // to block INSERT MESSAGE
+			log.Printf ("Editor load-3 text#=%d\n", len (e.Src.Text ()))
+		})
 		return nil
 	} else {
 		text, err := ioutil.ReadFile (fName)
