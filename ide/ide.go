@@ -8,7 +8,6 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 	gsci "github.com/kouzdra/go-scintilla/gtk"
 	"github.com/kouzdra/go-analyzer/project"
-	"strconv"
 	"os"
 	"fmt"
 )
@@ -21,6 +20,8 @@ type IDE struct {
 	Menubar *gtk .MenuBar
 	RED      gsci.Style
 	Prj     *project.Project
+	View    *gtk.TreeView
+	Store   *gtk.TreeStore
 }
 
 func NewIDE () *IDE {
@@ -43,9 +44,10 @@ func NewIDE () *IDE {
 	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swin.SetShadowType(gtk.SHADOW_IN)
 
-	treeView, _ := ide.MakeTree ()
-	hpaned.Add1 (treeView)
-	hpaned.Add2(swin)
+	ide.MakeTree ()
+	hpaned.Add1 (ide.View)
+	hpaned.Add2 (swin)
+	hpaned.SetPosition (256)
 
 	swin.Add(ide.Editor.Sci)
 
@@ -56,35 +58,47 @@ func NewIDE () *IDE {
 	return ide
 }
 
-func (ide *IDE) MakeTree () (*gtk.TreeView, *gtk.TreeStore) {
-	store := gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING)
-	treeview := gtk.NewTreeView()
-	model := store.ToTreeModel()
-	treeview.SetModel(model)
-
-	treeview.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", 0))
-	treeview.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text", gtk.NewCellRendererText(), "text", 1))
-
-	for n := 1; n <= 10; n++ {
-		var iter1, iter2, iter3 gtk.TreeIter
-		store.Append(&iter1, nil)
-		store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
-			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "Folder"+strconv.Itoa(n))
-		store.Append(&iter2, &iter1)
-		store.Set(&iter2, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
-			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "SubFolder"+strconv.Itoa(n))
-		store.Append(&iter3, &iter2)
-		store.Set(&iter3, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
-			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "File"+strconv.Itoa(n))
+func (ide *IDE) LoadView () {
+	var iter0 gtk.TreeIter
+	ide.Store.Append(&iter0, nil)
+	ide.Store.Set(&iter0, gtk.NewImage().RenderIcon(gtk.STOCK_FLOPPY,
+		gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "GO.PATH")
+	for path, pkg := range ide.Prj.Pkgs {
+		log.Printf ("path=%s #srcs=%d\n", path, len (pkg.Srcs))
+		
+		var iter1 gtk.TreeIter
+		ide.Store.Append(&iter1, &iter0)
+		ide.Store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, path)
+		for sPath, _ := range pkg.Srcs {
+			log.Printf ("   src=%s\n", sPath)
+			var iter2 gtk.TreeIter
+			ide.Store.Append(&iter2, &iter1)
+			ide.Store.Set(&iter2, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
+				gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, sPath)
+		}
 	}
+	ide.Store.Append(&iter0, nil)
+	ide.Store.Set(&iter0, gtk.NewImage().RenderIcon(gtk.STOCK_FLOPPY,
+		gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "GO.ROOT")
+}
 
-	treeview.Connect("row_activated", func() {
+func (ide *IDE) MakeTree () {
+	ide.Store = gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING)
+	ide.View  = gtk.NewTreeView()
+	model := ide.Store.ToTreeModel()
+	ide.View.SetModel(model)
+	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", 0))
+	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , 1))
+	ide.View.SetHeadersVisible (false)
+
+	ide.View.Connect("row_activated", func() {
 		var path *gtk.TreePath
 		var column *gtk.TreeViewColumn
-		treeview.GetCursor(&path, &column)
+		ide.View.GetCursor(&path, &column)
 		mes := "TreePath is: " + path.String()
 		dialog := gtk.NewMessageDialog(
-			treeview.GetTopLevelAsWindow(),
+			ide.View.GetTopLevelAsWindow(),
 			gtk.DIALOG_MODAL,
 			gtk.MESSAGE_INFO,
 			gtk.BUTTONS_OK,
@@ -95,7 +109,6 @@ func (ide *IDE) MakeTree () (*gtk.TreeView, *gtk.TreeStore) {
 		})
 		dialog.Run()
 	})
-	return treeview, store
 }
 
 	
