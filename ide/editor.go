@@ -78,6 +78,7 @@ func (e *Editor) Fontify () {
 	if src, err := e.ide.Prj.GetSrc (e.FName); err == nil {
 		es, f := e.ide.Prj.Analyze (src, 0)
 		log.Printf ("Fontify  %s", e.FName)
+		e.Sci.Styling.Clear ()
 		for _, m := range f.Markers {
 			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
 			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
