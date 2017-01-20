@@ -10,7 +10,7 @@ import (
 	"github.com/kouzdra/go-analyzer/project"
 	"os"
 	"fmt"
-	"sort"
+	"path"
 )
 
 var _ = log.Printf
@@ -74,40 +74,30 @@ func NewIDE () *IDE {
 	return ide
 }
 
-type Pkgs []*project.Pkg
-func (p Pkgs) Len  () int { return len (p) }
-func (p Pkgs) Swap (i, j int) { p [i], p [j] = p [j], p [i] }
-func (p Pkgs) Less (i, j int) bool { return p [i].Dir < p [j].Dir }
-
-func (ide *IDE) LoadView () {
-	var iter0 gtk.TreeIter
-	ide.Store.Append(&iter0, nil)
-	ide.Store.Set(&iter0, gtk.NewImage().RenderIcon(gtk.STOCK_FLOPPY,
-		gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "GO.PATH")
-
-	pkgs := make ([]*project.Pkg, 0, len (ide.Prj.Pkgs))
-	for _, pkg := range ide.Prj.Pkgs {
-		pkgs = append (pkgs, pkg)
-	}
-	sort.Sort (Pkgs (pkgs))
-
-	for _, pkg := range pkgs {
-		//log.Printf ("path=%s #srcs=%d\n", pkg.Dir + "+" + pkg.Name, len (pkg.Srcs))
-		var iter1 gtk.TreeIter
-		ide.Store.Append(&iter1, &iter0)
-		ide.Store.Set(&iter1, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
-			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, pkg.Dir)
-		for sPath, _ := range pkg.Srcs {
-			//log.Printf ("   src=%s\n", sPath)
-			var iter2 gtk.TreeIter
-			ide.Store.Append(&iter2, &iter1)
-			ide.Store.Set(&iter2, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
-				gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, sPath)
+func  (ide *IDE) fillTree (top bool, dirs [] project.Dir, iter *gtk.TreeIter) {
+	for _, dir := range dirs {
+		var subIter gtk.TreeIter
+		ide.Store.Append(&subIter, iter)
+		name := dir.Path
+		if !top { name = path.Base (name) }
+		ide.Store.Set(&subIter, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
+			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, name)
+		ide.fillTree (false, dir.Sub, &subIter)
+		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
+			for sPath, _ := range pkg.Srcs {
+				var srcIter gtk.TreeIter
+				ide.Store.Append(&srcIter, &subIter)
+				ide.Store.Set(&srcIter, gtk.NewImage().RenderIcon(gtk.STOCK_FILE,
+					gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, sPath)				
+			}
 		}
 	}
-	ide.Store.Append(&iter0, nil)
-	ide.Store.Set(&iter0, gtk.NewImage().RenderIcon(gtk.STOCK_FLOPPY,
-		gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, "GO.ROOT")
+}
+
+func (ide *IDE) LoadView () {
+ 	log.Printf ("Tree view loading ...")
+	ide.fillTree (true, ide.Prj.Tree, nil)
+ 	log.Printf ("... OK")
 }
 
 func (ide *IDE) MakeTree () {
