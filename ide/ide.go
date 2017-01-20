@@ -17,7 +17,7 @@ var _ = log.Printf
 
 type IDE struct {
 	Window    *gtk .Window
-	Editor    *Editor
+	Editors   *Editors
 	Menubar   *gtk .MenuBar
 	StatusBar *gtk .Statusbar
 	RED        gsci.Style
@@ -33,7 +33,8 @@ func NewIDE () *IDE {
 	ide.Window.SetTitle("Editor")
 	ide.Window.Connect("destroy", gtk.MainQuit)
 
-	ide.Editor = NewEditor(ide)
+	ide.Editors = NewEditors (ide)
+	//ide.Editor = ide.Editors.New ()
 	ide.MakeMenu()
 
 	vbox := gtk.NewVBox(false, 1)
@@ -41,10 +42,6 @@ func NewIDE () *IDE {
 
 	hpaned := gtk.NewHPaned()
 	vbox.Add(hpaned)
-
-	swinE := gtk.NewScrolledWindow(nil, nil)
-	swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	swinE.SetShadowType(gtk.SHADOW_IN)
 
 	ide.MakeTree ()
 	swinT := gtk.NewScrolledWindow(nil, nil)
@@ -56,10 +53,26 @@ func NewIDE () *IDE {
 	hpaned.SetPosition (256)
 
 	swinT.Add (ide.View)
-	swinE.Add(ide.Editor.Sci)
-
-	notebook.AppendPage(swinE, gtk.NewLabel("fileName"))
-	
+	{
+		swinE := gtk.NewScrolledWindow(nil, nil)
+		swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		swinE.SetShadowType(gtk.SHADOW_IN)
+		
+		ed := ide.Editors.New ()
+		swinE.Add(ed.Sci)
+		notebook.AppendPage(swinE, gtk.NewLabel("fileName1"))
+	}
+		
+	{
+		swinE := gtk.NewScrolledWindow(nil, nil)
+		swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		swinE.SetShadowType(gtk.SHADOW_IN)
+		
+		ed := ide.Editors.New ()
+		swinE.Add(ed.Sci)
+		notebook.AppendPage(swinE, gtk.NewLabel("fileName2"))
+	}
+		
 	ide.StatusBar = gtk.NewStatusbar()
 	context_id := ide.StatusBar.GetContextId("go-gode")
 	ide.StatusBar.Push(context_id, "Go Dev.Env.")
@@ -156,7 +169,7 @@ func (ide *IDE) MakeMenu () {
 	
 	addCascade ("_File", func (submenu *gtk.Menu) {
 		submenu.Append(makeItem ("E_xit", gtk.MainQuit))
-		submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
+		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
 	addCascade ("_View", func (submenu *gtk.Menu) {
@@ -164,8 +177,8 @@ func (ide *IDE) MakeMenu () {
 			fsd := gtk.NewFontSelectionDialog("Font")
 			fsd.Response(func() {
 				fmt.Println(fsd.GetFontName())
-				ide.Editor.Sci.Styling.SetFont(ide.RED, fsd.GetFontName())
-				ide.Editor.Sci.Styling.SetUnderline (ide.RED, true);
+				//ide.Editor.Sci.Styling.SetFont(ide.RED, fsd.GetFontName())
+				//ide.Editor.Sci.Styling.SetUnderline (ide.RED, true);
 				fsd.Destroy()
 			})
 			fsd.SetTransientFor(ide.Window)
