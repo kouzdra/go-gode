@@ -19,9 +19,12 @@ const (
 	Underline = 4
 )
 
+var style = gsci.Style (64)
+
 func def (id string, nm string, flags uint) *Face {
-	f := &Face{Id: id, Style: gsci.Style (0), Nm: nm, Flags: flags}
+	f := &Face{Id: id, Style: style, Nm: nm, Flags: flags}
 	Faces [id] = f
+	style ++
 	return f
 }
 
@@ -48,10 +51,7 @@ var (
 )
 
 func Init (sci * gsci.Scintilla) {
-	style := gsci.Style (64)
 	for _, f := range Faces {
-		f.Style = style
-		style = style + 1
 		s := sci.Styling
 		c := gdk.NewColor (f.Nm)
 		mk := func (u uint16) uint32 { return uint32 (u >> 8) }

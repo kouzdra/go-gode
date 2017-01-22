@@ -14,15 +14,6 @@ import "github.com/kouzdra/go-gode/faces"
 type Indic uint
 const INDIC_ERROR Indic = consts.INDIC_CONTAINER
 
-type Editors struct {
-	ide *IDE
-	Eds map[int]*Editor
-}
-
-func NewEditors (ide *IDE) *Editors {
-	return &Editors{ide:ide, Eds: make (map [int]*Editor)}
-}
-
 type Editor struct {
 	ide *IDE
 	Src *project.Src
@@ -31,20 +22,8 @@ type Editor struct {
 	lockCount int
 }
 
-func (eds *Editors) New () *Editor {
-	sci := gsci.NewScintilla ()
-	faces.Init (sci)
-	e := &Editor{ide:eds.ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
-	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
-	e.InitIndic ()
-	sci.Handlers.OnModify = e.OnModify
-	eds.Eds [sci.GetIdentifier ()] = e
-	log.Printf ("Editor created\n")
-	return e
-}
-
 func (e *Editor) Close () {
-	e.ide.Editors.Eds [e.GetIdentifier ()] = nil
+	e.ide.Editors.Close (e)
 	// destory scintilla
 }
 

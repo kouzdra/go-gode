@@ -33,8 +33,6 @@ func NewIDE () *IDE {
 	ide.Window.SetTitle("Editor")
 	ide.Window.Connect("destroy", gtk.MainQuit)
 
-	ide.Editors = NewEditors (ide)
-	//ide.Editor = ide.Editors.New ()
 	ide.MakeMenu()
 
 	vbox := gtk.NewVBox(false, 1)
@@ -47,39 +45,18 @@ func NewIDE () *IDE {
 	swinT := gtk.NewScrolledWindow(nil, nil)
 	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swinT.SetShadowType(gtk.SHADOW_NONE)
-	notebook := gtk.NewNotebook()
+	swinT.Add (ide.View)
 	hpaned.Add1 (swinT)
-	hpaned.Add2 (notebook)
+	ide.Editors = NewEditors (ide)
+	hpaned.Add2 (ide.Editors.Notebook)
 	hpaned.SetPosition (256)
 
-	swinT.Add (ide.View)
-	{
-		swinE := gtk.NewScrolledWindow(nil, nil)
-		swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		swinE.SetShadowType(gtk.SHADOW_IN)
-		
-		ed := ide.Editors.New ()
-		swinE.Add(ed.Sci)
-		notebook.AppendPage(swinE, gtk.NewLabel("fileName1"))
-	}
-		
-	{
-		swinE := gtk.NewScrolledWindow(nil, nil)
-		swinE.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		swinE.SetShadowType(gtk.SHADOW_IN)
-		
-		ed := ide.Editors.New ()
-		swinE.Add(ed.Sci)
-		notebook.AppendPage(swinE, gtk.NewLabel("fileName2"))
-	}
-		
 	ide.StatusBar = gtk.NewStatusbar()
 	context_id := ide.StatusBar.GetContextId("go-gode")
 	ide.StatusBar.Push(context_id, "Go Dev.Env.")
 
 	vbox.PackStart(ide.StatusBar, false, false, 0)
 
-	
 	ide.Window.Add(vbox)
 	ide.Window.SetSizeRequest(1024, 800)
 	ide.Window.ShowAll()
@@ -120,7 +97,7 @@ func (ide *IDE) MakeTree () {
 	ide.View.SetModel(model)
 	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", 0))
 	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , 1))
-	ide.View.SetHeadersVisible (false)
+	ide.View.SetHeadersVisible (true)
 
 	ide.View.Connect("row_activated", func() {
 		var path *gtk.TreePath
@@ -177,8 +154,6 @@ func (ide *IDE) MakeMenu () {
 			fsd := gtk.NewFontSelectionDialog("Font")
 			fsd.Response(func() {
 				fmt.Println(fsd.GetFontName())
-				//ide.Editor.Sci.Styling.SetFont(ide.RED, fsd.GetFontName())
-				//ide.Editor.Sci.Styling.SetUnderline (ide.RED, true);
 				fsd.Destroy()
 			})
 			fsd.SetTransientFor(ide.Window)

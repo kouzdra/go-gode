@@ -9,9 +9,18 @@ func main() {
 	ide := ide.NewIDE ()
 	ide.LoadProject ()
 	ide.LoadView ()
-	for _, ed := range ide.Editors.Eds {
-		ed.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/gode.go"))
-		ed.Fontify ()
-	}
+
+	//ide.Editors.New ("File 1")
+	//ide.Editors.New ("File 2")
+	
+	ed1 := ide.Editors.New ("File 1")
+	ed2 := ide.Editors.New ("File 2")
+	
+	ed1.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/gode.go"))
+	ed1.Fontify ()
+	//ed2.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/editors.go"))
+	ed2.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/ide.go"))
+	ed2.Fontify ()
+
 	gtk.Main()
 }
