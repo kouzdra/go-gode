@@ -41,7 +41,7 @@ func NewIDE () *IDE {
 	swinT := gtk.NewScrolledWindow(nil, nil)
 	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swinT.SetShadowType(gtk.SHADOW_NONE)
-	swinT.Add (ide.View)
+	swinT.AddWithViewPort (ide.View)
 	hpaned.Add1 (swinT)
 	ide.Editors = NewEditors (ide)
 	hpaned.Add2 (ide.Editors.Notebook)
