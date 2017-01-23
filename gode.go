@@ -15,7 +15,7 @@ func main() {
 	}
 	{
 		ed := ide.Editors.New ("File 2")
-		ed.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/ide.go"))
+ 		ed.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/ide.go"))
 		ed.Fontify ()
 	}
 	go ide.LoadView ()

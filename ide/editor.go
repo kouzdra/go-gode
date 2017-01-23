@@ -22,6 +22,36 @@ type Editor struct {
 	lockCount int
 }
 
+func (eds *Editors) New (fName string) *Editor {
+	sci := gsci.NewScintilla ()
+	faces.Init (sci)
+	e := &Editor{ide:eds.ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
+	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
+	e.Sci.AutoCSetDropRestOfWord (true)
+	e.Sci.AutoCSetSeparator ('/')
+	e.Sci.AutoCSetTypeSeparator (',')
+
+	e.InitIndic ()
+	sci.Handlers.OnModify = e.OnModify
+
+	swin := gtk.NewScrolledWindow(nil, nil)
+	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+	swin.SetShadowType(gtk.SHADOW_IN)
+	swin.Add(sci)
+
+	label := gtk.NewLabel(fName)
+	idx := eds.Notebook.AppendPage(swin, label)
+
+	page := &Page{Editor: e, Win: swin, Label: label, NbIdx: idx}
+	eds.Pages [sci.GetIdentifier ()] = page
+	
+	log.Printf ("Editor created\n")
+	swin.ShowAll ()
+
+
+	return e
+}
+
 func (e *Editor) Close () {
 	e.ide.Editors.Close (e)
 	// destory scintilla

@@ -4,7 +4,7 @@ import (
 	"log"
 	"github.com/mattn/go-gtk/gdkpixbuf"
 	"github.com/mattn/go-gtk/glib"
-	//"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 	gsci "github.com/kouzdra/go-scintilla/gtk"
 	"github.com/kouzdra/go-analyzer/project"
@@ -24,6 +24,7 @@ type IDE struct {
 	Prj       *project.Project
 	View      *gtk.TreeView
 	Store     *gtk.TreeStore
+	Accel     *gtk.AccelGroup
 }
 
 func NewIDE () *IDE {
@@ -33,6 +34,9 @@ func NewIDE () *IDE {
 	ide.Window.SetTitle("Editor")
 	ide.Window.Connect("destroy", gtk.MainQuit)
 
+	ide.Accel = gtk.NewAccelGroup ()
+	ide.Window.AddAccelGroup (ide.Accel)
+	
 	ide.MakeMenu()
 
 	vbox := gtk.NewVBox(false, 1)
@@ -162,7 +166,11 @@ func (ide *IDE) MakeMenu () {
 	})
 
 	addCascade ("_Edit", func (submenu *gtk.Menu) {
-		submenu.Append(makeItem ("_Complete", ide.Complete))
+//gtk_widget_add_accelerator (save_item, "activate", accel_group,
+		//	GDK_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+		item := makeItem ("_Complete", ide.Complete)
+		item.AddAccelerator ("activate", ide.Accel, gdk.KEY_space, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+		submenu.Append(item)
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
@@ -196,25 +204,3 @@ func (ide *IDE) MakeMenu () {
 	})
 }
 
-
-//-------------------------------------------------
-
-func (ide *IDE) Complete () {
-	if page := ide.Editors.GetCurrent (); page != nil {
-		log.Printf ("Complete [%s]\n", page.Editor.FName)
-		pos := page.Editor.Sci.GetCurrentPos ()
-		if src := page.Editor.Src; src == nil {
-			log.Printf ("Complete [%s] at %d, no SRC found\n", page.Editor.FName, pos)
-		} else {
-			log.Printf ("Complete [%s|%s::%s] at %d\n", page.Editor.FName, src.Dir, src.Name, pos)
-			if compl := ide.Prj.Complete (src, int (pos)); compl == nil {
-				log.Printf ("    -- No completion context found\n")
-			} else {
-				log.Printf("  [%s/%s] (%d/%d) #%d\n", compl.Pref, compl.Name, compl.Pos, compl.End, len (compl.Choices))
-				for i, c := range compl.Choices {
-					log.Printf ("    %d) %s(%s) AKA [%s] pos=%d end=%d\n", i, c.Kind, c.Name, c.Full, c.Pos, c.End)
-				}
-			}
-		}
-	}
-}

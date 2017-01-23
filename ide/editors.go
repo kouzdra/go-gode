@@ -1,10 +1,10 @@
 package ide
 
-import "log"
+//import "log"
 import "github.com/mattn/go-gtk/gtk"
-import gsci   "github.com/kouzdra/go-scintilla/gtk"
-import consts "github.com/kouzdra/go-scintilla/gtk/consts"
-import "github.com/kouzdra/go-gode/faces"
+//import gsci   "github.com/kouzdra/go-scintilla/gtk"
+//import consts "github.com/kouzdra/go-scintilla/gtk/consts"
+//import "github.com/kouzdra/go-gode/faces"
 
 type Editors struct {
 	ide *IDE
@@ -36,34 +36,6 @@ func (eds *Editors) GetCurrent () *Page {
 		}
 	}
 	panic ("no current page in page table")
-}
-
-func (eds *Editors) New (fName string) *Editor {
-	sci := gsci.NewScintilla ()
-	faces.Init (sci)
-	e := &Editor{ide:eds.ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
-	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
-
-	e.InitIndic ()
-	sci.Handlers.OnModify = e.OnModify
-
-	swin := gtk.NewScrolledWindow(nil, nil)
-	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	swin.SetShadowType(gtk.SHADOW_IN)
-	swin.Add(sci)
-
-	label := gtk.NewLabel(fName)
-	idx := eds.Notebook.AppendPage(swin, label)
-
-	page := &Page{Editor: e, Win: swin, Label: label, NbIdx: idx}
-	eds.Pages [sci.GetIdentifier ()] = page
-	
-	
-	log.Printf ("Editor created\n")
-	swin.ShowAll ()
-
-
-	return e
 }
 
 func (eds *Editors) Close (e *Editor) {
