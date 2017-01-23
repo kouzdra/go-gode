@@ -73,6 +73,7 @@ func  (ide *IDE) fillTree (top bool, dirs [] project.Dir, iter *gtk.TreeIter) {
 		ide.View.SetModel (model)
 		//model.Object.Unref ()
 	} ()
+	subs := make ([]func (), 0, len(dirs))
 	for _, dir := range dirs {
 		var subIter gtk.TreeIter
 		ide.Store.Append(&subIter, iter)
@@ -80,7 +81,7 @@ func  (ide *IDE) fillTree (top bool, dirs [] project.Dir, iter *gtk.TreeIter) {
 		if !top { name = path.Base (name) }
 		ide.Store.Set(&subIter, gtk.NewImage().RenderIcon(gtk.STOCK_DIRECTORY,
 			gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, name)
-		ide.fillTree (false, dir.Sub, &subIter)
+		subs = append (subs, func () { ide.fillTree (false, dir.Sub, &subIter) } )
 		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
 			for sPath, _ := range pkg.Srcs {
 				var srcIter gtk.TreeIter
@@ -89,6 +90,9 @@ func  (ide *IDE) fillTree (top bool, dirs [] project.Dir, iter *gtk.TreeIter) {
 					gtk.ICON_SIZE_SMALL_TOOLBAR, "").GPixbuf, sPath)				
 			}
 		}
+	}
+	for _, sub := range subs {
+		sub ()
 	}
 }
 
@@ -157,6 +161,11 @@ func (ide *IDE) MakeMenu () {
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
+	addCascade ("_Edit", func (submenu *gtk.Menu) {
+		submenu.Append(makeItem ("_Complete", ide.Complete))
+		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
+	})
+
 	addCascade ("_View", func (submenu *gtk.Menu) {
 		submenu.Append(makeItem ("_Font", func () {
 			fsd := gtk.NewFontSelectionDialog("Font")
@@ -185,4 +194,27 @@ func (ide *IDE) MakeMenu () {
 			dialog.Destroy()
 		}))
 	})
+}
+
+
+//-------------------------------------------------
+
+func (ide *IDE) Complete () {
+	if page := ide.Editors.GetCurrent (); page != nil {
+		log.Printf ("Complete [%s]\n", page.Editor.FName)
+		pos := page.Editor.Sci.GetCurrentPos ()
+		if src := page.Editor.Src; src == nil {
+			log.Printf ("Complete [%s] at %d, no SRC found\n", page.Editor.FName, pos)
+		} else {
+			log.Printf ("Complete [%s|%s::%s] at %d\n", page.Editor.FName, src.Dir, src.Name, pos)
+			if compl := ide.Prj.Complete (src, int (pos)); compl == nil {
+				log.Printf ("    -- No completion context found\n")
+			} else {
+				log.Printf("  [%s/%s] (%d/%d) #%d\n", compl.Pref, compl.Name, compl.Pos, compl.End, len (compl.Choices))
+				for i, c := range compl.Choices {
+					log.Printf ("    %d) %s(%s) AKA [%s] pos=%d end=%d\n", i, c.Kind, c.Name, c.Full, c.Pos, c.End)
+				}
+			}
+		}
+	}
 }

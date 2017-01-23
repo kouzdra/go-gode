@@ -8,7 +8,7 @@ import "github.com/kouzdra/go-gode/faces"
 
 type Editors struct {
 	ide *IDE
-	Id2Ed map[int]   *Page
+	Pages map[int]   *Page
 	Fn2Id map[string] int
 	Notebook *gtk.Notebook
 	
@@ -16,7 +16,7 @@ type Editors struct {
 
 func NewEditors (ide *IDE) *Editors {
 	return &Editors{ide:ide,
-		Id2Ed: make (map [int   ]*Page),
+		Pages: make (map [int   ]*Page),
 		Fn2Id: make (map [string] int ),
 		Notebook: gtk.NewNotebook()}
 }
@@ -28,11 +28,22 @@ type Page struct {
 	NbIdx   int
 }
 
+func (eds *Editors) GetCurrent () *Page {
+	no := eds.Notebook.GetCurrentPage ()
+	for _, page := range eds.Pages {
+		if page.NbIdx == no {
+			return page
+		}
+	}
+	panic ("no current page in page table")
+}
+
 func (eds *Editors) New (fName string) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
 	e := &Editor{ide:eds.ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
 	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
+
 	e.InitIndic ()
 	sci.Handlers.OnModify = e.OnModify
 
@@ -45,7 +56,7 @@ func (eds *Editors) New (fName string) *Editor {
 	idx := eds.Notebook.AppendPage(swin, label)
 
 	page := &Page{Editor: e, Win: swin, Label: label, NbIdx: idx}
-	eds.Id2Ed [sci.GetIdentifier ()] = page
+	eds.Pages [sci.GetIdentifier ()] = page
 	
 	
 	log.Printf ("Editor created\n")
