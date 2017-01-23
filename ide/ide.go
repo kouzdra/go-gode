@@ -65,6 +65,14 @@ func NewIDE () *IDE {
 }
 
 func  (ide *IDE) fillTree (top bool, dirs [] project.Dir, iter *gtk.TreeIter) {
+	model := ide.View.GetModel ()
+	//model.Object.Ref ()
+	ide.View.SetModel (nil)
+	
+	defer func () {
+		ide.View.SetModel (model)
+		//model.Object.Unref ()
+	} ()
 	for _, dir := range dirs {
 		var subIter gtk.TreeIter
 		ide.Store.Append(&subIter, iter)
