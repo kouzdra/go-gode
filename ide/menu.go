@@ -54,6 +54,11 @@ func (ide *IDE) MakeMenu () {
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
+	addCascade ("_Tech", func (submenu *gtk.Menu) {
+		item := makeItem ("_Show Selection", ide.TechShowSelection)
+		submenu.Append(item)
+	})
+
 	addCascade ("_Help", func (submenu *gtk.Menu) {
 		submenu.Append(makeItem ("_About", func () {
 			dialog := gtk.NewAboutDialog()
