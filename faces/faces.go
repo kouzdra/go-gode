@@ -52,13 +52,12 @@ var (
 
 func Init (sci * gsci.Scintilla) {
 	for _, f := range Faces {
-		s := sci.Styling
 		c := gdk.NewColor (f.Nm)
 		mk := func (u uint16) uint32 { return uint32 (u >> 8) }
-		s.SetFont (f.Style, DefaultFont)
-		s.SetFg (f.Style, gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)))
-		s.SetUnderline (f.Style, (f.Flags & Underline) != 0)
-		s.SetItalic    (f.Style, (f.Flags & Italic   ) != 0)
-		s.SetBold      (f.Style, (f.Flags & Bold     ) != 0)
+		sci.StyleSetFont (f.Style, DefaultFont)
+		sci.StyleSetFg (f.Style, gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)))
+		sci.StyleSetUnderline (f.Style, (f.Flags & Underline) != 0)
+		sci.StyleSetItalic    (f.Style, (f.Flags & Italic   ) != 0)
+		sci.StyleSetBold      (f.Style, (f.Flags & Bold     ) != 0)
 	}
 }
