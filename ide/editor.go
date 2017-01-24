@@ -58,10 +58,10 @@ func (e *Editor) Close () {
 }
 
 func (e *Editor) InitIndic () {
-	e.Sci.Indic.SetStyle (uint (INDIC_ERROR), consts.INDIC_COMPOSITIONTHICK/*SQUIGGLEPIXMAP*/)
+	e.Sci.IndicSetStyle (uint (INDIC_ERROR), consts.INDIC_COMPOSITIONTHICK/*SQUIGGLEPIXMAP*/)
 	c := gdk.NewColor  ("red")
 	mk := func (u uint16) uint32 { return uint32 (u >> 8) }
-	e.Sci.Indic.SetFg (uint (INDIC_ERROR),
+	e.Sci.IndicSetFg (uint (INDIC_ERROR),
 		gsci.Color ((mk (c.Red ()) << 0) | (mk (c.Green ()) << 8) | (mk (c.Blue ()) << 16)))
 }
 
@@ -116,7 +116,7 @@ func (e *Editor) Fontify () {
 		es, f := e.ide.Prj.Analyze (src, 0)
 		log.Printf ("Fontify  %s", e.FName)
 		e.Sci.Styling.Clear ()
-		e.Sci.Indic  .ClearIndic (uint (INDIC_ERROR))
+		e.Sci.IndicClear (uint (INDIC_ERROR))
 		for _, m := range f.Markers {
 			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
 			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
@@ -126,7 +126,7 @@ func (e *Editor) Fontify () {
 		}
 		for _, err := range es.Errors {
 			log.Printf ("  %s %s at %d:%d\n", err.Lvl, err.Msg, err.Beg, err.End)
-			e.Sci.Indic.SetRange (uint (INDIC_ERROR), gsci.Pos (err.Beg), gsci.Pos (err.End))
+			e.Sci.IndicSetRange (uint (INDIC_ERROR), gsci.Pos (err.Beg), gsci.Pos (err.End))
 		}
 		
 	} else {
