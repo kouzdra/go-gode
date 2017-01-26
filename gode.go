@@ -6,19 +6,11 @@ import "github.com/kouzdra/go-gode/ide"
 
 func main() {
 	gtk.Init(&os.Args)
-	ide := ide.NewIDE ()
-	ide.LoadProject ()
-	{
-		ed := ide.Editors.New ("File 1")
-		ed.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/gode.go"))
-		ed.Fontify ()
-	}
-	{
-		ed := ide.Editors.New ("File 2")
- 		ed.LoadFile (os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/ide.go"))
-		ed.Fontify ()
-	}
-	go ide.LoadView ()
+	de := ide.NewIDE ()
+	de.LoadProject ()
+	de.Editors.OpenLoc (ide.Loc {os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/gode.go"), 2, 4})
+	de.Editors.OpenLoc (ide.Loc {os.ExpandEnv ("$GOPATH/src/github.com/kouzdra/go-gode/ide/ide.go"), 4, 1})
+	go de.LoadView ()
 
 	gtk.Main ()
 }

@@ -3,6 +3,7 @@ package ide
 import "fmt"
 import "log"
 import "io/ioutil"
+import "path/filepath"
 import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
@@ -15,17 +16,21 @@ type Indic uint
 const INDIC_ERROR Indic = consts.INDIC_CONTAINER
 
 type Editor struct {
-	ide *IDE
+	IDE *IDE
 	Src *project.Src
 	Sci *gsci.Scintilla
 	FName string
-	lockCount int
+	LockCount int
+
+	Win    *gtk.ScrolledWindow
+	Label  *gtk.Label
+	NbIdx   int
 }
 
 func (eds *Editors) New (fName string) *Editor {
 	sci := gsci.NewScintilla ()
 	faces.Init (sci)
-	e := &Editor{ide:eds.ide, Src:nil, Sci:sci, FName:"", lockCount: 0}
+	e := &Editor{IDE:eds.IDE, Src:nil, Sci:sci, FName:"", LockCount: 0}
 	e.Sci.SetPhasesDraw (consts.SC_PHASES_MULTIPLE)
 	e.Sci.AutoCSetDropRestOfWord (true)
 	e.Sci.AutoCSetSeparator ('/')
@@ -34,26 +39,29 @@ func (eds *Editors) New (fName string) *Editor {
 	e.InitIndic ()
 	sci.Handlers.OnModify = e.OnModify
 
-	swin := gtk.NewScrolledWindow(nil, nil)
-	swin.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	swin.SetShadowType(gtk.SHADOW_IN)
-	swin.Add(sci)
+	e.Win = gtk.NewScrolledWindow(nil, nil)
+	e.Win.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+	e.Win.SetShadowType(gtk.SHADOW_IN)
+	e.Win.Add(sci)
 
-	label := gtk.NewLabel(fName)
-	idx := eds.Notebook.AppendPage(swin, label)
+	e.Label = gtk.NewLabel(filepath.Base (fName))
+	e.NbIdx = eds.Notebook.AppendPage(e.Win, e.Label)
 
-	page := &Page{Editor: e, Win: swin, Label: label, NbIdx: idx}
-	eds.Pages [sci.GetIdentifier ()] = page
+	eds.Editors [fName] = e
 	
 	log.Printf ("Editor created\n")
-	swin.ShowAll ()
-
+	e.Win.ShowAll ()
 
 	return e
 }
 
+func (e *Editor) Goto (line, col int) {
+	pos := e.Sci.FindColumn (line, col)
+	e.Sci.GotoPos (pos)
+}
+
 func (e *Editor) Close () {
-	e.ide.Editors.Close (e)
+	e.IDE.Editors.Close (e)
 	// destory scintilla
 }
 
@@ -70,14 +78,14 @@ func (e *Editor) GetIdentifier () int {
 }
 
 func (e *Editor) DoLock (actions func ()) {
-	e.lockCount ++
-	defer func () { e.lockCount -- } ()
+	e.LockCount ++
+	defer func () { e.LockCount -- } ()
 	actions ()
 }
 
 func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, linesAdded int, text string,
 	line uint, foldLevelNow uint, foldLevelPrev uint) {
-		if e.lockCount == 0 && e.Src != nil {
+		if e.LockCount == 0 && e.Src != nil {
 			if ((notificationType & consts.SC_MOD_INSERTTEXT) != 0) {
 				log.Printf ("SCI INSERT: %x %d #%d (%s) lines=%d\n", notificationType, pos, length, text, linesAdded);
 				e.Src.Changed (int (pos), int (pos), text)
@@ -92,7 +100,7 @@ func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, lin
 
 func (e *Editor) LoadFile (fName string) error {
 	e.FName = fName
-	if src, err := e.ide.Prj.GetSrc (fName); err == nil {
+	if src, err := e.IDE.Prj.GetSrc (fName); err == nil {
 		e.DoLock (func () {
 			e.Src = src
 			text := src.Text ()
@@ -112,8 +120,8 @@ func (e *Editor) LoadFile (fName string) error {
 
 
 func (e *Editor) Fontify () {
-	if src, err := e.ide.Prj.GetSrc (e.FName); err == nil {
-		es, f := e.ide.Prj.Analyze (src, 0)
+	if src, err := e.IDE.Prj.GetSrc (e.FName); err == nil {
+		es, f := e.IDE.Prj.Analyze (src, 0)
 		log.Printf ("Fontify  %s", e.FName)
 		e.Sci.StyleClear ()
 		e.Sci.IndicClear (uint (INDIC_ERROR))
@@ -137,7 +145,7 @@ func (e *Editor) Fontify () {
 func (e *Editor) LoadFileFromDialog () {
 	filechooserdialog := gtk.NewFileChooserDialog(
 		"Choose File...",
-		e.ide.Window,
+		e.IDE.Window,
 		gtk.FILE_CHOOSER_ACTION_OPEN,
 		gtk.STOCK_OK,
 		gtk.RESPONSE_ACCEPT)
@@ -148,7 +156,7 @@ func (e *Editor) LoadFileFromDialog () {
 		fname := filechooserdialog.GetFilename()
 		fmt.Println(fname)
 		if err := e.LoadFile (fname); err != nil {
-			gtk.NewMessageDialog (e.ide.Window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+			gtk.NewMessageDialog (e.IDE.Window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
 				"error loading file `%s': %s", fname, err)
 		} else {
 			e.Fontify ()

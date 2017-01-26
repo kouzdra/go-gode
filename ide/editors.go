@@ -7,36 +7,49 @@ import "github.com/mattn/go-gtk/gtk"
 //import "github.com/kouzdra/go-gode/faces"
 
 type Editors struct {
-	ide *IDE
-	Pages map[int]   *Page
-	Fn2Id map[string] int
+	IDE *IDE
+	Editors map[string] *Editor
 	Notebook *gtk.Notebook
-	
+}
+
+type Loc struct {
+	FName string
+	Line, Col int
 }
 
 func NewEditors (ide *IDE) *Editors {
-	return &Editors{ide:ide,
-		Pages: make (map [int   ]*Page),
-		Fn2Id: make (map [string] int ),
+	return &Editors{IDE:ide,
+		Editors: make (map [string]*Editor),
 		Notebook: gtk.NewNotebook()}
 }
 
-type Page struct {
-	Win    *gtk.ScrolledWindow
-	Label  *gtk.Label
-	Editor *Editor
-	NbIdx   int
+func (eds *Editors) OpenLoc (loc Loc) *Editor {
+	ed := eds.Editors [loc.FName]
+	if ed == nil {
+		ed = eds.New (loc.FName)
+		ed.LoadFile (loc.FName)
+		ed.Fontify ()
+	}
+	eds.SetCurrent (ed)
+	ed.Goto (loc.Line, loc.Col)
+	return ed
 }
 
-func (eds *Editors) GetCurrent () *Page {
+func (eds *Editors) GetCurrent () *Editor {
 	no := eds.Notebook.GetCurrentPage ()
-	for _, page := range eds.Pages {
-		if page.NbIdx == no {
-			return page
+	for _, ed := range eds.Editors {
+		if ed.NbIdx == no {
+			return ed
 		}
 	}
 	panic ("no current page in page table")
 }
+
+func (eds *Editors) SetCurrent (ed *Editor) {
+	eds.Notebook.SetCurrentPage (ed.NbIdx)
+}
+
+
 
 func (eds *Editors) Close (e *Editor) {
 	//e.ide.Editors.Eds [e.GetIdentifier ()] = nil

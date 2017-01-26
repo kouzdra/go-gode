@@ -20,13 +20,13 @@ var _ = log.Printf
 //-------------------------------------------------
 
 func (ide *IDE) Complete () {
-	if page := ide.Editors.GetCurrent (); page != nil {
-		log.Printf ("Complete [%s]\n", page.Editor.FName)
-		pos := page.Editor.Sci.GetCurrentPos () + 1
-		if src := page.Editor.Src; src == nil {
-			log.Printf ("Complete [%s] at %d, no SRC found\n", page.Editor.FName, pos)
+	if ed := ide.Editors.GetCurrent (); ed != nil {
+		log.Printf ("Complete [%s]\n", ed.FName)
+		pos := ed.Sci.GetCurrentPos () + 1
+		if src := ed.Src; src == nil {
+			log.Printf ("Complete [%s] at %d, no SRC found\n", ed.FName, pos)
 		} else {
-			log.Printf ("Complete [%s|%s::%s] at %d\n", page.Editor.FName, src.Dir, src.Name, pos)
+			log.Printf ("Complete [%s|%s::%s] at %d\n", ed.FName, src.Dir, src.Name, pos)
 			if compl := ide.Prj.Complete (src, int (pos)); compl == nil {
 				log.Printf ("    -- No completion context found\n")
 			} else {
@@ -38,9 +38,10 @@ func (ide *IDE) Complete () {
 					list += sep + c.Name
 					sep = "/"
 				}
-				page.Editor.Sci.AutoCShow (uint (int (compl.Pos) - int (pos)), list)
+				ed.Sci.AutoCShow (uint (int (compl.Pos) - int (pos)), list)
 				
 			}
 		}
 	}
 }
+

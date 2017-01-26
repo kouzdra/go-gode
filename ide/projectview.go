@@ -55,7 +55,7 @@ func (ide *IDE) MakeTree () {
 	ide.View.SetModel(model)
 	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", 0))
 	ide.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , 1))
-	ide.View.SetHeadersVisible (true)
+	ide.View.SetHeadersVisible (false)
 
 	ide.View.Connect("row_activated", func() {
 		var path *gtk.TreePath
