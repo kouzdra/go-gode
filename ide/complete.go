@@ -22,13 +22,15 @@ var _ = log.Printf
 func (ide *IDE) Complete () {
 	if ed := ide.Editors.GetCurrent (); ed != nil {
 		log.Printf ("Complete [%s]\n", ed.FName)
-		pos := ed.Sci.GetCurrentPos () + 1
+		pos := ed.Sci.GetCurrentPos ()
 		if src := ed.Src; src == nil {
 			log.Printf ("Complete [%s] at %d, no SRC found\n", ed.FName, pos)
 		} else {
 			log.Printf ("Complete [%s|%s::%s] at %d\n", ed.FName, src.Dir, src.Name, pos)
 			if compl := ide.Prj.Complete (src, int (pos)); compl == nil {
 				log.Printf ("    -- No completion context found\n")
+			} else if len (compl.Choices) == 0 {
+				log.Printf ("    -- No completions found\n")
 			} else {
 				log.Printf("  [%s/%s] (%d/%d) #%d\n", compl.Pref, compl.Name, compl.Pos, compl.End, len (compl.Choices))
 				list := ""
