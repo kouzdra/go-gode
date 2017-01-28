@@ -4,6 +4,7 @@ import "log"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import "github.com/kouzdra/go-analyzer/project"
+import "github.com/kouzdra/go-gode/options"
 
 var _ = log.Printf
 
@@ -17,10 +18,13 @@ type IDE struct {
 	View      *gtk.TreeView
 	Store     *gtk.TreeStore
 	Accel     *gtk.AccelGroup
+	Options   *options.Options
 }
 
 func NewIDE () *IDE {
 	ide := &IDE{}
+
+	ide.Options = options.New ()
 	
 	ide.Window = gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	ide.Window.SetTitle("Editor")
