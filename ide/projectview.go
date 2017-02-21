@@ -60,8 +60,17 @@ func (ide *IDE) MakeTree () {
 	ide.View.Connect("row_activated", func() {
 		var path *gtk.TreePath
 		var column *gtk.TreeViewColumn
+		var iter gtk.TreeIter
 		ide.View.GetCursor(&path, &column)
 		mes := "TreePath is: " + path.String()
+		model := ide.View.GetModel ()
+		if model.GetIter (&iter, path) {
+			var val glib.GValue
+			model.GetValue (&iter, 1, &val)
+			mes += ": " + val.GetString ()
+		} else {
+			mes += ": Invalid path"
+		}
 		dialog := gtk.NewMessageDialog(
 			ide.View.GetTopLevelAsWindow(),
 			gtk.DIALOG_MODAL,
@@ -69,9 +78,7 @@ func (ide *IDE) MakeTree () {
 			gtk.BUTTONS_OK,
 			mes)
 		dialog.SetTitle("TreePath")
-		dialog.Response(func() {
-			dialog.Destroy()
-		})
+		dialog.Response(dialog.Destroy)
 		dialog.Run()
 	})
 }
