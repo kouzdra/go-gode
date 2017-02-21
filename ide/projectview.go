@@ -10,11 +10,24 @@ import 	"path"
 
 var _ = log.Printf
 
-func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter) {
+/*func  (ide *IDE) printTree (dirs [] project.Dir, ind string) {
+	for _, dir := range dirs {
+		log.Printf ("%s >> dir: [%s]\n", ind, dir.Path)
+		//fPath := dir.Path
+		ide.printTree (dir.Sub, ind + "  ")
+		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
+			for sPath, src := range pkg.Srcs {
+				log.Printf ("%s ---: [%s | %s]\n", ind, sPath, src.Dir)
+			}
+		}
+	}
+}*/
+
+func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter, ind string) {
 	subs := make ([]func (), 0, len(dirs))
 	for _, dir := range dirs {
 		var subIter gtk.TreeIter
-		log.Printf (">> add dir: [%s]\n", dir.Path)
+		//log.Printf ("%s >> add dir: [%s]\n", ind, dir.Path)
 		ide.Store.Append(&subIter, iter)
 		name := dir.Path
 		if iter != nil {
@@ -22,10 +35,11 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter) {
 		}
 		fPath := dir.Path
 		ide.Store.Set(&subIter, ide.Icons.Dir.GPixbuf, name, fPath)
-		subs = append (subs, func () { ide.fillTree2 (dir.Sub, &subIter) } )
+		sDirs := dir.Sub
+		subs = append (subs, func () { ide.fillTree2 (sDirs, &subIter, ind + "  ") } )
 		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
 			for sPath, src := range pkg.Srcs {
-				log.Printf ("   >> add src: [%s | %s]\n", sPath, src.Dir)
+				//log.Printf ("%s   >> add src: [%s | %s]\n", ind, sPath, src.Dir)
 				var srcIter gtk.TreeIter
 				ide.Store.Append(&srcIter, &subIter)
 				ide.Store.Set(&srcIter, ide.Icons.File.GPixbuf, sPath, src.Dir)
@@ -38,6 +52,7 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter) {
 }
 
 func  (ide *IDE) fillTree (dirs [] project.Dir) {
+	//ide.printTree (dirs, "+++ ")
 	model := ide.View.GetModel ()
 	//model.Object.Ref ()
 	ide.View.SetModel (nil)
@@ -46,7 +61,7 @@ func  (ide *IDE) fillTree (dirs [] project.Dir) {
 		ide.View.SetModel (model)
 		//model.Object.Unref ()
 	} ()
-	ide.fillTree2 (dirs, nil)
+	ide.fillTree2 (dirs, nil, "## ")
 }
 
 func (ide *IDE) LoadView () {
