@@ -1,6 +1,6 @@
 package ide
 
-//import "log"
+import "log"
 import "github.com/mattn/go-gtk/gtk"
 //import gsci   "github.com/kouzdra/go-scintilla/gtk"
 //import consts "github.com/kouzdra/go-scintilla/gtk/consts"
@@ -33,6 +33,11 @@ func (eds *Editors) OpenLoc (loc Loc) *Editor {
 	eds.SetCurrent (ed)
 	ed.Goto (loc.Line, loc.Col)
 	return ed
+}
+
+func (eds *Editors) OpenFile (fName string) *Editor {
+	log.Printf ("-->> File [%s] opened\n", fName)
+	return eds.OpenLoc (Loc{fName, 0, 0})
 }
 
 func (eds *Editors) GetCurrent () *Editor {

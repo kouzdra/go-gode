@@ -98,9 +98,12 @@ func (ide *IDE) MakeTree () {
 		if model.GetIter (&iter, path) {
 			var val glib.GValue
 			model.GetValue (&iter, COL_FNAME, &val)
+			fName := val.GetString ()
 			mes += ": [" + val.GetString () + "]"
 			model.GetValue (&iter, COL_FPATH, &val)
 			mes += " (" + val.GetString () + ")"
+			fPath := val.GetString ()
+			ide.Editors.OpenFile (fPath + "/" + fName)
 		} else {
 			mes += ": Invalid path"
 		}
