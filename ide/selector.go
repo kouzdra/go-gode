@@ -13,17 +13,10 @@ var _ = log.Printf
 type Selector struct {
 	ide       *IDE
 	Dialog    *gtk.Dialog
-	Entry     *gtk.Label
-	/*Editors   *Editors
-	Menubar   *gtk .MenuBar
-	StatusBar *gtk .Statusbar
-	RED        gsci.Style
-	Prj       *project.Project
+	Entry     *gtk.Entry
 	View      *gtk.TreeView
-	Store     *gtk.TreeStore*/
+	Store     *gtk.TreeStore
 	Accel     *gtk.AccelGroup
-	/*Options   *options.Options
-	Icons     *icons.Icons*/
 }
 
 func (ide *IDE) NewSelector () *Selector {
@@ -31,27 +24,35 @@ func (ide *IDE) NewSelector () *Selector {
 
 	selector.ide = ide
 	selector.Dialog = gtk.NewDialog()
-	//ide.Window.SetTitle("Editor")
-	selector.Dialog.Connect("close", func () { } )
+	//selector.Dialog.Connect("close", func () { } )
 	selector.Dialog.Response(func() {
 		log.Println("Selector closed")
 		selector.Dialog.Destroy()
 	})
 
+
 	//selector.Accel = gtk.NewAccelGroup ()
 	//selector.Window.AddAccelGroup (selector.Accel)
 	//selector.Window.AddAccelerator ("destroy", selector.Accel, gdk.KEY_Escape, 0, 0)
-	vbox := gtk.NewVBox(false, 1)
-	//selector.Entry = gtk.NewLabel()
-	//selector.Entry.SetText("Hello-2")
-	vbox.Add(gtk.NewLabel("Hell-2"))
-	vbox.Add(gtk.NewLabel("Hell-2"))
+	vbox := selector.Dialog.GetContentArea()
+	selector.Entry = gtk.NewEntry()
+	selector.Entry.SetText("prefix")
+	vbox.PackStart(selector.Entry, false, false, 0)
+	
+	l2 := gtk.NewLabel("Hell-2")
+	vbox.PackStart(l2, true, true, 0)
+	//l2.Show()
+
 	//vbox.PackStart(ide.Menubar, false, false, 0)
 
 	//hpaned := gtk.NewHPaned()
 	//vbox.Add(hpaned)
 
-	//selector.Window.MakeTree ()
+	selector.ide.MakeTree ()
+	swinT := gtk.NewScrolledWindow(nil, nil)
+	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+	swinT.SetShadowType(gtk.SHADOW_NONE)
+	swinT.AddWithViewPort (ide.View)
 	//win := gtk.NewWindow(nil, nil)
 	//winT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	//winT.SetShadowType(gtk.SHADOW_NONE)
@@ -67,10 +68,11 @@ func (ide *IDE) NewSelector () *Selector {
 
 	//vbox.PackStart(ide.StatusBar, false, false, 0)*/
 
-	selector.Dialog.Add(vbox)
+	//selector.Dialog.Add(vbox)
 	//selector.Window.SetModal(true)
 	selector.Dialog.SetDecorated(false)
 	selector.Dialog.SetSizeRequest(400, 300)
+	selector.Dialog.ShowAll()
 	selector.Dialog.Run()
 
 	return selector
