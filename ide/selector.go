@@ -2,11 +2,8 @@ package ide
 
 import "log"
 import "github.com/mattn/go-gtk/gtk"
-//import "github.com/mattn/go-gtk/gdk"
-////import gsci "github.com/kouzdra/go-scintilla/gtk"
-//import "github.com/kouzdra/go-analyzer/project"
-//import "github.com/kouzdra/go-gode/options"
-//import "github.com/kouzdra/go-gode/icons"
+import "github.com/mattn/go-gtk/gdkpixbuf"
+import 	"github.com/mattn/go-gtk/glib"
 
 var _ = log.Printf
 
@@ -31,45 +28,33 @@ func (ide *IDE) NewSelector () *Selector {
 	})
 
 
-	//selector.Accel = gtk.NewAccelGroup ()
-	//selector.Window.AddAccelGroup (selector.Accel)
-	//selector.Window.AddAccelerator ("destroy", selector.Accel, gdk.KEY_Escape, 0, 0)
 	vbox := selector.Dialog.GetContentArea()
 	selector.Entry = gtk.NewEntry()
 	selector.Entry.SetText("prefix")
 	vbox.PackStart(selector.Entry, false, false, 0)
 	
-	l2 := gtk.NewLabel("Hell-2")
-	vbox.PackStart(l2, true, true, 0)
-	//l2.Show()
+	selector.Store = gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING)
+	selector.View  = gtk.NewTreeView()
+	model := selector.Store.ToTreeModel()
+	selector.View.SetModel(model)
+	selector.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", COL_ICON))
+	selector.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
+	pathCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
+	pathCol.SetVisible (false)
+	selector.View.AppendColumn(pathCol)
+	selector.View.SetHeadersVisible (false)
 
-	//vbox.PackStart(ide.Menubar, false, false, 0)
+	selector.View.Connect("row_activated", func() {
+	})
 
-	//hpaned := gtk.NewHPaned()
-	//vbox.Add(hpaned)
+	vbox.PackStart(selector.View, true, true, 0)
 
 	selector.ide.MakeTree ()
 	swinT := gtk.NewScrolledWindow(nil, nil)
 	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swinT.SetShadowType(gtk.SHADOW_NONE)
-	swinT.AddWithViewPort (ide.View)
-	//win := gtk.NewWindow(nil, nil)
-	//winT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-	//winT.SetShadowType(gtk.SHADOW_NONE)
-	//winT.AddWithViewPort (ide.View)
-	//hpaned.Add1 (swinT)
-	//ide.Editors = NewEditors (ide)
-	//hpaned.Add2 (ide.Editors.Notebook)
-	//hpaned.SetPosition (256)
+	swinT.AddWithViewPort (selector.View)
 
-	//ide.StatusBar = gtk.NewStatusbar()
-	//context_id := ide.StatusBar.GetContextId("go-gode")
-	//ide.StatusBar.Push(context_id, "Go Dev.Env.")
-
-	//vbox.PackStart(ide.StatusBar, false, false, 0)*/
-
-	//selector.Dialog.Add(vbox)
-	//selector.Window.SetModal(true)
 	selector.Dialog.SetDecorated(false)
 	selector.Dialog.SetSizeRequest(400, 300)
 	selector.Dialog.ShowAll()
