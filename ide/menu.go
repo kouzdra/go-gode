@@ -29,9 +29,16 @@ func (ide *IDE) MakeMenu () {
 	})
 
 	addCascade ("_Edit", func (submenu *gtk.Menu) {
-		item := makeItem ("_Complete", ide.Complete)
-		item.AddAccelerator ("activate", ide.Accel, gdk.KEY_space, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
-		submenu.Append(item)
+		{
+			item := makeItem ("_Complete", ide.Complete)
+			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_space, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+			submenu.Append(item)
+		}
+		{
+			item := makeItem ("_Types", ide.Select)
+			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_T, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+			submenu.Append(item)
+		}
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
