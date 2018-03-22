@@ -3,10 +3,11 @@ package ide
 import "log"
 import "sort"
 import "strings"
+import "strconv"
 import "path/filepath"
 import "github.com/kouzdra/go-gode/icons"
 import "github.com/mattn/go-gtk/gtk"
-import "github.com/mattn/go-gtk/gdk"
+//import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gdkpixbuf"
 import "github.com/mattn/go-gtk/glib"
 
@@ -16,6 +17,7 @@ type Selector struct {
 	ide       *IDE
 	Dialog    *gtk.Dialog
 	Entry     *gtk.Entry
+	System    *gtk.CheckButton
 	View      *gtk.TreeView
 	Store     *gtk.TreeStore
 	Accel     *gtk.AccelGroup
@@ -36,26 +38,33 @@ func (ide *IDE) NewSelector () *Selector {
 	selector.Dialog = gtk.NewDialog()
 	//selector.Dialog.Connect("close", func () { } )
 	selector.Dialog.Response(func() {
-		log.Println("Selector closed")
+		//log.Println("Selector closed")
 		selector.Dialog.Destroy()
 	})
 
 	vbox := selector.Dialog.GetContentArea()
+
+	hbox := gtk.NewHBox (false, 0)
 	selector.Entry = gtk.NewEntry()
-	vbox.PackStart(selector.Entry, false, false, 0)
+	hbox.PackStart(selector.Entry, true, true, 0)
 	selector.Entry.Connect("changed", func () {
-		log.Printf("##CHAGNED: %s", selector.Entry.GetText())
+		//log.Printf("##CHAGNED: %s", selector.Entry.GetText())
 		selector.Reset()
 	})
-	//selector.Entry.Connect("key-pressed-event", selector.keyPressed)
 
-
+	selector.System = gtk.NewCheckButtonWithLabel("system:")
+	hbox.PackStart(selector.System, false, false, 0)
+	selector.System.Connect("toggled", func () {
+		selector.Reset()
+	})
+	
+	vbox.PackStart(hbox, false, false, 0)
+	
 	selector.View, selector.Store = createList ()
 	selector.View.Connect("row_activated", func() {
 		log.Printf("## Row activated")
 	})
 	vbox.PackStart(selector.View, true, true, 0)
-	//selector.View.Connect("key-pressed-event", selector.keyPressed)
 
 	swinT := gtk.NewScrolledWindow(nil, nil)
 	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -63,7 +72,7 @@ func (ide *IDE) NewSelector () *Selector {
 	swinT.AddWithViewPort (selector.View)
 
 	selector.Dialog.SetDecorated(false)
-	selector.Dialog.SetSizeRequest(600, 300)
+	selector.Dialog.SetSizeRequest(700, 350)
 
 	return selector
 }
@@ -75,38 +84,46 @@ func (selector *Selector) Run () {
 
 func (selector *Selector) Set (Elems []SelElem) {
 	selector.Elems = Elems
+	selector.Reset()
 }
 
-func (ide *IDE) ReadablePath (fname string) string {
+func (ide *IDE) ReadablePath (fname string) (string, bool) {
 	path := filepath.Clean(filepath.Dir(fname))
 	goroot := filepath.Clean(ide.Prj.Context.GOROOT)
 	gopath := filepath.Clean(ide.Prj.Context.GOPATH)
-	log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
+	//log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
 	if strings.HasPrefix (path, goroot) {
-		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot))
+		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot)), true
 	}
 	if strings.HasPrefix (path, gopath) {
-		return filepath.Join ("$GOPATH", strings.TrimPrefix (path, gopath))
+		return filepath.Join ("$GOPATH", strings.TrimPrefix (path, gopath)), false
 	}
-	return filepath.Clean (path)
+	return filepath.Clean (path), false
 }
 
 func (selector *Selector) Reset () {
 	prefix := selector.Entry.GetText()
+	system := selector.System.GetActive()
 	selector.Store.Clear ()
-	if len (prefix) != 0 || len (selector.Elems) <= 100 {
-		for _, elem := range selector.Elems {
-			if (strings.HasPrefix (elem.Name, prefix)) {
+	counter := 0
+	for i, elem := range selector.Elems {
+		if strings.HasPrefix (elem.Name, prefix) {
+			readable, sys := selector.ide.ReadablePath (elem.Loc.FName)
+			if system || !sys {
 				var iter gtk.TreeIter
 				selector.Store.Append(&iter, nil)
-				selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, selector.ide.ReadablePath (elem.Loc.FName))
+				selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, readable, strconv.Itoa(i))
+				counter ++
+				if counter >= 1000 {
+					return;
+				}
 			}
 		}
 	}
 }
 
 func createList () (*gtk.TreeView, *gtk.TreeStore) {
-	store := gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING)
+	store := gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING, glib.G_TYPE_STRING)
 	view  := gtk.NewTreeView()
 	model := store.ToTreeModel()
 	view.SetModel(model)
@@ -114,12 +131,11 @@ func createList () (*gtk.TreeView, *gtk.TreeStore) {
 	view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
 	pathCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
 	view.AppendColumn(pathCol)
-	view.SetHeadersVisible (false)
+	numCol := gtk.NewTreeViewColumnWithAttributes("text"   , gtk.NewCellRendererText  (), "text"  , COL_NO)
+	view.AppendColumn(numCol)
+	numCol.SetVisible(false)
+	view.SetHeadersVisible(false)
 	return view, store
-}
-
-func (selector *Selector) keyPressed (key *gdk.EventKey) {
-	log.Printf ("## KEY PRESSED: %s", key.String)
 }
 
 type SortSelElems []SelElem

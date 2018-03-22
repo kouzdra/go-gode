@@ -74,6 +74,7 @@ const (
 	COL_ICON  = 0
 	COL_FNAME = 1
 	COL_FPATH = 2
+	COL_NO    = 3
 )
 
 func (ide *IDE) MakeTree () {
