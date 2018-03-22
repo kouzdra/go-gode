@@ -1,9 +1,11 @@
 package ide
 
 import "log"
+import "github.com/kouzdra/go-gode/icons"
 import "github.com/mattn/go-gtk/gtk"
+import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gdkpixbuf"
-import 	"github.com/mattn/go-gtk/glib"
+import "github.com/mattn/go-gtk/glib"
 
 var _ = log.Printf
 
@@ -14,12 +16,20 @@ type Selector struct {
 	View      *gtk.TreeView
 	Store     *gtk.TreeStore
 	Accel     *gtk.AccelGroup
+	Elems     []SelElem
+}
+
+type SelElem struct {
+	Icon icons.Icon
+	Name string
+	Loc  Loc
 }
 
 func (ide *IDE) NewSelector () *Selector {
 	selector := &Selector{}
 
 	selector.ide = ide
+	selector.Elems = nil
 	selector.Dialog = gtk.NewDialog()
 	//selector.Dialog.Connect("close", func () { } )
 	selector.Dialog.Response(func() {
@@ -32,24 +42,19 @@ func (ide *IDE) NewSelector () *Selector {
 	selector.Entry = gtk.NewEntry()
 	selector.Entry.SetText("prefix")
 	vbox.PackStart(selector.Entry, false, false, 0)
-	
-	selector.Store = gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING)
-	selector.View  = gtk.NewTreeView()
-	model := selector.Store.ToTreeModel()
-	selector.View.SetModel(model)
-	selector.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", COL_ICON))
-	selector.View.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
-	pathCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
-	pathCol.SetVisible (false)
-	selector.View.AppendColumn(pathCol)
-	selector.View.SetHeadersVisible (false)
-
-	selector.View.Connect("row_activated", func() {
+	selector.Entry.Connect("changed", func () {
+		log.Printf("##CHAGNED: %s", selector.Entry.GetText())
 	})
+	//selector.Entry.Connect("key-pressed-event", selector.keyPressed)
 
+
+	selector.View, selector.Store = createList ()
+	selector.View.Connect("row_activated", func() {
+		log.Printf("## Row activated")
+	})
 	vbox.PackStart(selector.View, true, true, 0)
+	//selector.View.Connect("key-pressed-event", selector.keyPressed)
 
-	selector.ide.MakeTree ()
 	swinT := gtk.NewScrolledWindow(nil, nil)
 	swinT.SetPolicy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 	swinT.SetShadowType(gtk.SHADOW_NONE)
@@ -57,13 +62,46 @@ func (ide *IDE) NewSelector () *Selector {
 
 	selector.Dialog.SetDecorated(false)
 	selector.Dialog.SetSizeRequest(400, 300)
-	selector.Dialog.ShowAll()
-	selector.Dialog.Run()
 
 	return selector
 }
 
+func (selector *Selector) Run () {
+	selector.Dialog.ShowAll()
+	selector.Dialog.Run()
+}
+
+func (selector *Selector) Set (Elems []SelElem) {
+	selector.Elems = Elems
+	for _, elem := range Elems {
+		var iter gtk.TreeIter
+		selector.Store.Append(&iter, nil)
+		selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, elem.Loc.FName)
+	}
+}
+
+func createList () (*gtk.TreeView, *gtk.TreeStore) {
+	store := gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING)
+	view  := gtk.NewTreeView()
+	model := store.ToTreeModel()
+	view.SetModel(model)
+	view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", COL_ICON))
+	view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
+	pathCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
+	pathCol.SetVisible (false)
+	view.AppendColumn(pathCol)
+	view.SetHeadersVisible (false)
+	return view, store
+}
+
+func (selector *Selector) keyPressed (key *gdk.EventKey) {
+	log.Printf ("## KEY PRESSED: %s", key.String)
+}
 
 func (ide *IDE) Select () {
-	ide.NewSelector ()	
+	selector := ide.NewSelector()
+	mk := func (n string) SelElem { return SelElem{Icon:ide.Icons.Dir, Name:n, Loc:Loc{n, 1, 1} } }
+	elems := []SelElem{mk("First"), mk("Second") }
+	selector.Set(elems)
+	selector.Run ()
 }
