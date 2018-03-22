@@ -1,6 +1,7 @@
 package ide
 
 import "log"
+import "strings"
 import "github.com/kouzdra/go-gode/icons"
 import "github.com/mattn/go-gtk/gtk"
 import "github.com/mattn/go-gtk/gdk"
@@ -37,13 +38,12 @@ func (ide *IDE) NewSelector () *Selector {
 		selector.Dialog.Destroy()
 	})
 
-
 	vbox := selector.Dialog.GetContentArea()
 	selector.Entry = gtk.NewEntry()
-	selector.Entry.SetText("prefix")
 	vbox.PackStart(selector.Entry, false, false, 0)
 	selector.Entry.Connect("changed", func () {
 		log.Printf("##CHAGNED: %s", selector.Entry.GetText())
+		selector.Reset()
 	})
 	//selector.Entry.Connect("key-pressed-event", selector.keyPressed)
 
@@ -73,10 +73,19 @@ func (selector *Selector) Run () {
 
 func (selector *Selector) Set (Elems []SelElem) {
 	selector.Elems = Elems
-	for _, elem := range Elems {
-		var iter gtk.TreeIter
-		selector.Store.Append(&iter, nil)
-		selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, elem.Loc.FName)
+}
+
+func (selector *Selector) Reset () {
+	prefix := selector.Entry.GetText()
+	selector.Store.Clear ()
+	if len (prefix) != 0 {
+		for _, elem := range selector.Elems {
+			if (strings.HasPrefix (elem.Name, prefix)) {
+				var iter gtk.TreeIter
+				selector.Store.Append(&iter, nil)
+				selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, elem.Loc.FName)
+			}
+		}
 	}
 }
 
@@ -101,7 +110,7 @@ func (selector *Selector) keyPressed (key *gdk.EventKey) {
 func (ide *IDE) Select () {
 	selector := ide.NewSelector()
 	mk := func (n string) SelElem { return SelElem{Icon:ide.Icons.Dir, Name:n, Loc:Loc{n, 1, 1} } }
-	elems := []SelElem{mk("First"), mk("Second") }
+	elems := []SelElem{mk("AAAAA"), mk("AABB") }
 	selector.Set(elems)
 	selector.Run ()
 }
