@@ -63,7 +63,9 @@ func NewIDE () *IDE {
 	vbox.PackStart(ide.StatusBar, false, false, 0)
 
 	ide.Window.Add(vbox)
-	ide.Window.SetSizeRequest(1200, 700)
+	ide.Window.SetSizeRequest(1000, 600)
+	ide.Window.SetResizable(true)
+	ide.Window.Maximize()
 	ide.Window.ShowAll()
 
 	return ide
