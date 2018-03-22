@@ -34,6 +34,19 @@ func (ide *IDE) MakeMenu () {
 			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_space, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
 			submenu.Append(item)
 		}
+		submenu.Append(makeItem ("_Fonts", func () {
+			fsd := gtk.NewFontSelectionDialog("Font")
+			fsd.Response(func() {
+				fmt.Println(fsd.GetFontName())
+				fsd.Destroy()
+			})
+			fsd.SetTransientFor(ide.Window)
+			fsd.Run()
+		}))
+		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
+	})
+
+	addCascade ("_View", func (submenu *gtk.Menu) {
 		{
 			item := makeItem ("_Files", ide.SelectFiles)
 			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_F, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
@@ -44,19 +57,6 @@ func (ide *IDE) MakeMenu () {
 			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_N, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
 			submenu.Append(item)
 		}
-		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
-	})
-
-	addCascade ("_View", func (submenu *gtk.Menu) {
-		submenu.Append(makeItem ("_Fonts", func () {
-			fsd := gtk.NewFontSelectionDialog("Font")
-			fsd.Response(func() {
-				fmt.Println(fsd.GetFontName())
-				fsd.Destroy()
-			})
-			fsd.SetTransientFor(ide.Window)
-			fsd.Run()
-		}))
 	})
 
 	addCascade ("_Build", func (submenu *gtk.Menu) {
