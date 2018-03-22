@@ -1,6 +1,8 @@
 package ide
 
 import "log"
+import "strings"
+import "path/filepath"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import "github.com/kouzdra/go-analyzer/project"
@@ -61,8 +63,22 @@ func NewIDE () *IDE {
 	vbox.PackStart(ide.StatusBar, false, false, 0)
 
 	ide.Window.Add(vbox)
-	ide.Window.SetSizeRequest(1024, 800)
+	ide.Window.SetSizeRequest(1200, 700)
 	ide.Window.ShowAll()
 
 	return ide
+}
+
+func (ide *IDE) ReadablePath (fname string) (string, bool) {
+	path := filepath.Clean(filepath.Dir(fname))
+	goroot := filepath.Clean(ide.Prj.Context.GOROOT)
+	gopath := filepath.Clean(ide.Prj.Context.GOPATH)
+	//log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
+	if strings.HasPrefix (path, goroot) {
+		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot)), true
+	}
+	if strings.HasPrefix (path, gopath) {
+		return filepath.Join ("$GOPATH", strings.TrimPrefix (path, gopath)), false
+	}
+	return filepath.Clean (path), false
 }

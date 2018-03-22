@@ -4,7 +4,6 @@ import "log"
 import "sort"
 import "strings"
 import "strconv"
-import "path/filepath"
 import "github.com/kouzdra/go-gode/icons"
 import "github.com/mattn/go-gtk/gtk"
 //import "github.com/mattn/go-gtk/gdk"
@@ -103,20 +102,6 @@ func (selector *Selector) Run () gtk.ResponseType {
 func (selector *Selector) Set (Elems []SelElem) {
 	selector.Elems = Elems
 	selector.Reset()
-}
-
-func (ide *IDE) ReadablePath (fname string) (string, bool) {
-	path := filepath.Clean(filepath.Dir(fname))
-	goroot := filepath.Clean(ide.Prj.Context.GOROOT)
-	gopath := filepath.Clean(ide.Prj.Context.GOPATH)
-	//log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
-	if strings.HasPrefix (path, goroot) {
-		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot)), true
-	}
-	if strings.HasPrefix (path, gopath) {
-		return filepath.Join ("$GOPATH", strings.TrimPrefix (path, gopath)), false
-	}
-	return filepath.Clean (path), false
 }
 
 func (selector *Selector) Reset () {

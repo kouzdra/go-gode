@@ -34,7 +34,11 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter, ind string)
 			name = path.Base (name)
 		}
 		fPath := dir.Path
-		ide.Store.Set(&subIter, ide.Icons.Dir.GPixbuf, name, fPath)
+		readable, _ := ide.ReadablePath (name)
+		if iter != nil {
+			readable = name
+		}
+		ide.Store.Set(&subIter, ide.Icons.Dir.GPixbuf, readable, fPath)
 		sDirs := dir.Sub
 		subs = append (subs, func () { ide.fillTree2 (sDirs, &subIter, ind + "  ") } )
 		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
