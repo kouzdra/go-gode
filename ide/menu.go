@@ -35,15 +35,20 @@ func (ide *IDE) MakeMenu () {
 			submenu.Append(item)
 		}
 		{
-			item := makeItem ("_Types", ide.Select)
-			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_T, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+			item := makeItem ("_Files", ide.SelectFiles)
+			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_F, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+			submenu.Append(item)
+		}
+		{
+			item := makeItem ("_Names", ide.SelectNames)
+			item.AddAccelerator ("activate", ide.Accel, gdk.KEY_N, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
 			submenu.Append(item)
 		}
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
 	addCascade ("_View", func (submenu *gtk.Menu) {
-		submenu.Append(makeItem ("_Font", func () {
+		submenu.Append(makeItem ("_Fonts", func () {
 			fsd := gtk.NewFontSelectionDialog("Font")
 			fsd.Response(func() {
 				fmt.Println(fsd.GetFontName())

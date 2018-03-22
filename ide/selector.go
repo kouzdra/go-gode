@@ -1,7 +1,9 @@
 package ide
 
 import "log"
+import "sort"
 import "strings"
+import "path/filepath"
 import "github.com/kouzdra/go-gode/icons"
 import "github.com/mattn/go-gtk/gtk"
 import "github.com/mattn/go-gtk/gdk"
@@ -61,7 +63,7 @@ func (ide *IDE) NewSelector () *Selector {
 	swinT.AddWithViewPort (selector.View)
 
 	selector.Dialog.SetDecorated(false)
-	selector.Dialog.SetSizeRequest(400, 300)
+	selector.Dialog.SetSizeRequest(600, 300)
 
 	return selector
 }
@@ -75,15 +77,29 @@ func (selector *Selector) Set (Elems []SelElem) {
 	selector.Elems = Elems
 }
 
+func (ide *IDE) ReadablePath (fname string) string {
+	path := filepath.Clean(filepath.Dir(fname))
+	goroot := filepath.Clean(ide.Prj.Context.GOROOT)
+	gopath := filepath.Clean(ide.Prj.Context.GOPATH)
+	log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
+	if strings.HasPrefix (path, goroot) {
+		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot))
+	}
+	if strings.HasPrefix (path, gopath) {
+		return filepath.Join ("$GOPATH", strings.TrimPrefix (path, gopath))
+	}
+	return filepath.Clean (path)
+}
+
 func (selector *Selector) Reset () {
 	prefix := selector.Entry.GetText()
 	selector.Store.Clear ()
-	if len (prefix) != 0 {
+	if len (prefix) != 0 || len (selector.Elems) <= 100 {
 		for _, elem := range selector.Elems {
 			if (strings.HasPrefix (elem.Name, prefix)) {
 				var iter gtk.TreeIter
 				selector.Store.Append(&iter, nil)
-				selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, elem.Loc.FName)
+				selector.Store.Set(&iter, elem.Icon.GPixbuf, elem.Name, selector.ide.ReadablePath (elem.Loc.FName))
 			}
 		}
 	}
@@ -97,7 +113,6 @@ func createList () (*gtk.TreeView, *gtk.TreeStore) {
 	view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", COL_ICON))
 	view.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
 	pathCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
-	pathCol.SetVisible (false)
 	view.AppendColumn(pathCol)
 	view.SetHeadersVisible (false)
 	return view, store
@@ -107,10 +122,15 @@ func (selector *Selector) keyPressed (key *gdk.EventKey) {
 	log.Printf ("## KEY PRESSED: %s", key.String)
 }
 
-func (ide *IDE) Select () {
+type SortSelElems []SelElem
+func (elems SortSelElems) Len () int { return len (elems) }
+func (elems SortSelElems) Swap (i, j int) { elems[i], elems[j] = elems[j], elems[i] }
+type SortElems struct { SortSelElems }
+func (e SortElems) Less (i, j int) bool { return e.SortSelElems[i].Name < e.SortSelElems[j].Name }
+
+func (ide *IDE) Select (elems []SelElem) {
 	selector := ide.NewSelector()
-	mk := func (n string) SelElem { return SelElem{Icon:ide.Icons.Dir, Name:n, Loc:Loc{n, 1, 1} } }
-	elems := []SelElem{mk("AAAAA"), mk("AABB") }
+	sort.Sort(SortElems{SortSelElems(elems)})
 	selector.Set(elems)
 	selector.Run ()
 }
