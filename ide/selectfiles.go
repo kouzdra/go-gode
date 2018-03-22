@@ -1,5 +1,6 @@
 package ide
 
+import "log"
 import "path/filepath"
 import "github.com/kouzdra/go-analyzer/project"
 
@@ -18,5 +19,9 @@ func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 
 func (ide *IDE) SelectFiles () {
 	elems := ide.getFiles(make ([]SelElem, 0, 100), ide.Prj.Tree)
-	ide.Select(elems)
+	res := ide.Select(elems)
+	if res != nil {
+		log.Printf(">> OPEN LOC")
+		ide.Editors.OpenLoc(res.Loc)
+	}
 }

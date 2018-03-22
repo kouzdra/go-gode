@@ -22,6 +22,7 @@ type Selector struct {
 	Store     *gtk.TreeStore
 	Accel     *gtk.AccelGroup
 	Elems     []SelElem
+	Result    *SelElem
 }
 
 type SelElem struct {
@@ -34,11 +35,11 @@ func (ide *IDE) NewSelector () *Selector {
 	selector := &Selector{}
 
 	selector.ide = ide
-	selector.Elems = nil
+	selector.Elems  = nil
+	selector.Result = nil
 	selector.Dialog = gtk.NewDialog()
 	//selector.Dialog.Connect("close", func () { } )
 	selector.Dialog.Response(func() {
-		//log.Println("Selector closed")
 		selector.Dialog.Destroy()
 	})
 
@@ -48,11 +49,10 @@ func (ide *IDE) NewSelector () *Selector {
 	selector.Entry = gtk.NewEntry()
 	hbox.PackStart(selector.Entry, true, true, 0)
 	selector.Entry.Connect("changed", func () {
-		//log.Printf("##CHAGNED: %s", selector.Entry.GetText())
 		selector.Reset()
 	})
 
-	selector.System = gtk.NewCheckButtonWithLabel("system:")
+	selector.System = gtk.NewCheckButtonWithLabel("System")
 	hbox.PackStart(selector.System, false, false, 0)
 	selector.System.Connect("toggled", func () {
 		selector.Reset()
@@ -62,7 +62,25 @@ func (ide *IDE) NewSelector () *Selector {
 	
 	selector.View, selector.Store = createList ()
 	selector.View.Connect("row_activated", func() {
-		log.Printf("## Row activated")
+		var path *gtk.TreePath
+		var column *gtk.TreeViewColumn
+		var iter gtk.TreeIter
+		selector.View.GetCursor(&path, &column)
+		log.Printf (">> TreePath is: %s", path.String())
+		model := selector.View.GetModel()
+		if model.GetIter (&iter, path) {
+			var val glib.GValue
+			model.GetValue (&iter, COL_NO, &val)
+			if no, err := strconv.Atoi (val.GetString ()); err == nil {
+				log.Printf (">> ROW NO: %d, loc=%s", no, selector.Elems[no].Loc)
+				selector.Result = &selector.Elems[no]
+				selector.Dialog.Response(gtk.RESPONSE_ACCEPT)
+			} else {
+				log.Printf ("Invalid NO")
+			}
+		} else {
+			log.Printf ("Invalid path")
+		}
 	})
 	vbox.PackStart(selector.View, true, true, 0)
 
@@ -77,9 +95,9 @@ func (ide *IDE) NewSelector () *Selector {
 	return selector
 }
 
-func (selector *Selector) Run () {
+func (selector *Selector) Run () gtk.ResponseType {
 	selector.Dialog.ShowAll()
-	selector.Dialog.Run()
+	return selector.Dialog.Run()
 }
 
 func (selector *Selector) Set (Elems []SelElem) {
@@ -144,9 +162,10 @@ func (elems SortSelElems) Swap (i, j int) { elems[i], elems[j] = elems[j], elems
 type SortElems struct { SortSelElems }
 func (e SortElems) Less (i, j int) bool { return e.SortSelElems[i].Name < e.SortSelElems[j].Name }
 
-func (ide *IDE) Select (elems []SelElem) {
+func (ide *IDE) Select (elems []SelElem) *SelElem {
 	selector := ide.NewSelector()
 	sort.Sort(SortElems{SortSelElems(elems)})
 	selector.Set(elems)
-	selector.Run ()
+	selector.Run()
+	return selector.Result
 }
