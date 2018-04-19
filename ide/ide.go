@@ -3,6 +3,8 @@ package ide
 import "log"
 import "strings"
 import "path/filepath"
+import "github.com/mattn/go-gtk/gdkpixbuf"
+import "github.com/mattn/go-gtk/glib"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import "github.com/kouzdra/go-analyzer/project"
@@ -12,17 +14,19 @@ import "github.com/kouzdra/go-gode/icons"
 var _ = log.Printf
 
 type IDE struct {
-	Window    *gtk .Window
-	Editors   *Editors
-	Menubar   *gtk .MenuBar
-	StatusBar *gtk .Statusbar
-	RED        gsci.Style
-	Prj       *project.Project
-	View      *gtk.TreeView
-	Store     *gtk.TreeStore
-	Accel     *gtk.AccelGroup
-	Options   *options.Options
-	Icons     *icons.Icons
+	Window      *gtk.Window
+	Editors     *Editors
+	ErrorsView  *gtk.TreeView
+	ErrorsStore *gtk.TreeStore
+	Menubar     *gtk.MenuBar
+	StatusBar   *gtk.Statusbar
+	RED         gsci.Style
+	Prj         *project.Project
+	View        *gtk.TreeView
+	Store       *gtk.TreeStore
+	Accel       *gtk.AccelGroup
+	Options     *options.Options
+	Icons       *icons.Icons
 }
 
 func NewIDE () *IDE {
@@ -52,8 +56,14 @@ func NewIDE () *IDE {
 	swinT.SetShadowType(gtk.SHADOW_NONE)
 	swinT.AddWithViewPort (ide.View)
 	hpaned.Add1 (swinT)
+
+	vpaned := gtk.NewVPaned()
 	ide.Editors = NewEditors (ide)
-	hpaned.Add2 (ide.Editors.Notebook)
+	vpaned.Add1 (ide.Editors.Notebook)
+	ide.MakeErrorsList ()
+	vpaned.Add1 (ide.ErrorsView)
+
+	hpaned.Add2 (vpaned)
 	hpaned.SetPosition (256)
 
 	ide.StatusBar = gtk.NewStatusbar()
@@ -69,6 +79,19 @@ func NewIDE () *IDE {
 	ide.Window.ShowAll()
 
 	return ide
+}
+
+
+func (ide *IDE) MakeErrorsList () {
+	ide.ErrorsStore = gtk.NewTreeStore(gdkpixbuf.GetType(), glib.G_TYPE_STRING, glib.G_TYPE_STRING)
+	ide.ErrorsView  = gtk.NewTreeView()
+	model := ide.Store.ToTreeModel()
+	ide.ErrorsView.SetModel(model)
+	ide.ErrorsView.AppendColumn(gtk.NewTreeViewColumnWithAttributes("pixbuf", gtk.NewCellRendererPixbuf(), "pixbuf", COL_ICON))
+	ide.ErrorsView.AppendColumn(gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FNAME))
+	msgCol := gtk.NewTreeViewColumnWithAttributes("text"  , gtk.NewCellRendererText  (), "text"  , COL_FPATH)
+	ide.View.AppendColumn(msgCol)
+	ide.View.SetHeadersVisible (false)
 }
 
 func (ide *IDE) ReadablePath (fname string) (string, bool) {

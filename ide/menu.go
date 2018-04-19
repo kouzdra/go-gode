@@ -24,7 +24,9 @@ func (ide *IDE) MakeMenu () {
 	}
 	
 	addCascade ("_File", func (submenu *gtk.Menu) {
-		submenu.Append(makeItem ("E_xit", gtk.MainQuit))
+		item := makeItem ("E_xit", gtk.MainQuit)
+		item.AddAccelerator ("activate", ide.Accel, gdk.KEY_X, gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+		submenu.Append(item)
 		//submenu.Append(makeItem ("_Open", ide.Editor.LoadFileFromDialog))
 	})
 
