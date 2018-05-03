@@ -4,7 +4,7 @@ import "log"
 import "github.com/mattn/go-gtk/gdkpixbuf"
 import 	"github.com/mattn/go-gtk/glib"
 import 	"github.com/mattn/go-gtk/gtk"
-import 	"github.com/kouzdra/go-analyzer/project"
+import 	project "github.com/kouzdra/go-analyzer/gproject"
 import 	"os"
 import 	"path"
 

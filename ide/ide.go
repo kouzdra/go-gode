@@ -7,7 +7,7 @@ import "github.com/mattn/go-gtk/gdkpixbuf"
 import "github.com/mattn/go-gtk/glib"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
-import "github.com/kouzdra/go-analyzer/project"
+import project "github.com/kouzdra/go-analyzer/gproject"
 import "github.com/kouzdra/go-gode/options"
 import "github.com/kouzdra/go-gode/icons"
 
