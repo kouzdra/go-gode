@@ -1,5 +1,5 @@
-all: gode
-	./$<
+all: consts gode
+	./gode
 
 clean:
 	go clean gode.go
