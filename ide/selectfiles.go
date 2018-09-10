@@ -5,7 +5,7 @@ import project "github.com/kouzdra/go-analyzer/gproject"
 
 func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 	for _, dir := range dirs {
-		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
+		if pkg := ide.Prj.GetPackages() [dir.GetPath()]; pkg != nil {
 			for sPath, src := range pkg.GetSrcs () {
 				elems = append(elems, SelElem{
 					ide.Icons.File, sPath.Name, Loc{src.FName (), 0, 0}})
