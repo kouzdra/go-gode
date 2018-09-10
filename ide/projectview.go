@@ -46,7 +46,7 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter, ind string)
 				//log.Printf ("%s   >> add src: [%s | %s]\n", ind, sPath, src.Dir)
 				var srcIter gtk.TreeIter
 				ide.Store.Append(&srcIter, &subIter)
-				ide.Store.Set(&srcIter, ide.Icons.File.GPixbuf, sPath, src.Dir)
+				ide.Store.Set(&srcIter, ide.Icons.File.GPixbuf, sPath, src.GetDir().Name)
 			}
 		}
 	}
