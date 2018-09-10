@@ -26,7 +26,7 @@ func (ide *IDE) Complete () {
 		if src := ed.Src; src == nil {
 			log.Printf ("Complete [%s] at %d, no SRC found\n", ed.FName, pos)
 		} else {
-			log.Printf ("Complete [%s|%s::%s] at %d\n", ed.FName, src.Dir, src.Name, pos)
+			log.Printf ("Complete [%s|%s::%s] at %d\n", ed.FName, src.Dir, src.GetName().Name, pos)
 			if compl := ide.Prj.Complete (src, int (pos)); compl == nil {
 				log.Printf ("    -- No completion context found\n")
 			} else if len (compl.Choices) == 0 {
