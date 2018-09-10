@@ -42,11 +42,11 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter, ind string)
 		sDirs := dir.Sub
 		subs = append (subs, func () { ide.fillTree2 (sDirs, &subIter, ind + "  ") } )
 		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
-			for sPath, src := range pkg.Srcs {
-				//log.Printf ("%s   >> add src: [%s | %s]\n", ind, sPath, src.Dir)
+			for sPath, src := range pkg.GetSrcs () {
+				//log.Printf ("%s   >> add src: [%s | %s]\n", ind, sPath.Name, src.Dir)
 				var srcIter gtk.TreeIter
 				ide.Store.Append(&srcIter, &subIter)
-				ide.Store.Set(&srcIter, ide.Icons.File.GPixbuf, sPath, src.GetDir().Name)
+				ide.Store.Set(&srcIter, ide.Icons.File.GPixbuf, sPath.Name, src.GetDir().Name)
 			}
 		}
 	}
