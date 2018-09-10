@@ -1,7 +1,6 @@
 package ide
 
 import "log"
-import "path/filepath"
 import project "github.com/kouzdra/go-analyzer/gproject"
 
 func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
@@ -9,7 +8,7 @@ func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 		if pkg := ide.Prj.Pkgs [dir.Path]; pkg != nil {
 			for sPath, src := range pkg.Srcs {
 				elems = append(elems, SelElem{
-					ide.Icons.File, sPath, Loc{filepath.Join(src.Dir, src.Name), 0, 0}})
+					ide.Icons.File, sPath, Loc{src.FName (), 0, 0}})
 			}
 		}
 		elems = ide.getFiles(elems, dir.Sub)
