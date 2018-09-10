@@ -131,5 +131,5 @@ func (ide *IDE) LoadProject () {
 	ide.Prj.SetRoot (os.ExpandEnv("$GOROOT"))
 	ide.Prj.SetPath (os.ExpandEnv("$GOPATH"))
 	ide.Prj.Load ()
-	log.Printf ("Project loaded: #Dirs: %d", len (ide.Prj.Dirs))
+	log.Printf ("Project loaded: #Dirs: %d", len (ide.Prj.GetDirs ()))
 }
