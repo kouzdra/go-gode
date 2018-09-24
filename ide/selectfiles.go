@@ -8,7 +8,7 @@ func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 		if pkg := ide.Prj.GetPackages() [dir.GetPath()]; pkg != nil {
 			for sPath, src := range pkg.GetSrcs () {
 				elems = append(elems, SelElem{
-					ide.Icons.File, sPath.Name, Loc{src.FName (), 0, 0}})
+					ide.Icons.File, sPath.Name, Loc{project.FName (src), 0, 0}})
 			}
 		}
 		elems = ide.getFiles(elems, dir.Sub)

@@ -17,7 +17,7 @@ const INDIC_ERROR Indic = consts.INDIC_CONTAINER
 
 type Editor struct {
 	IDE *IDE
-	Src *project.Src
+	Src project.Source
 	Sci *gsci.Scintilla
 	FName string
 	LockCount int
@@ -103,7 +103,7 @@ func (e *Editor) LoadFile (fName string) error {
 	if src, err := e.IDE.Prj.GetSrc (fName); err == nil {
 		e.DoLock (func () {
 			e.Src = src
-			text := src.Text ()
+			text := src.GetText ()
 			e.Sci.SetText (text)
 			e.Src.SetText (text) // to block INSERT MESSAGE
 		})
