@@ -8,7 +8,7 @@ import "github.com/mattn/go-gtk/gdk"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
 import consts "github.com/kouzdra/go-scintilla/gtk/consts"
-import project "github.com/kouzdra/go-analyzer/project/golang"
+import "github.com/kouzdra/go-analyzer/project/iface"
 //import "github.com/kouzdra/go-analyzer/analyzer"
 import "github.com/kouzdra/go-gode/faces"
 
@@ -17,7 +17,7 @@ const INDIC_ERROR Indic = consts.INDIC_CONTAINER
 
 type Editor struct {
 	IDE *IDE
-	Src project.Source
+	Src iface.Source
 	Sci *gsci.Scintilla
 	FName string
 	LockCount int

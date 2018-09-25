@@ -7,7 +7,7 @@ import "github.com/mattn/go-gtk/gdkpixbuf"
 import "github.com/mattn/go-gtk/glib"
 import "github.com/mattn/go-gtk/gtk"
 import gsci "github.com/kouzdra/go-scintilla/gtk"
-import project "github.com/kouzdra/go-analyzer/project/golang"
+import "github.com/kouzdra/go-analyzer/project/iface"
 import "github.com/kouzdra/go-gode/options"
 import "github.com/kouzdra/go-gode/icons"
 
@@ -21,7 +21,7 @@ type IDE struct {
 	Menubar     *gtk.MenuBar
 	StatusBar   *gtk.Statusbar
 	RED         gsci.Style
-	Project     project.Project
+	Project     iface.Project
 	View        *gtk.TreeView
 	Store       *gtk.TreeStore
 	Accel       *gtk.AccelGroup
