@@ -21,7 +21,7 @@ type IDE struct {
 	Menubar     *gtk.MenuBar
 	StatusBar   *gtk.Statusbar
 	RED         gsci.Style
-	Prj         *project.Project
+	Prj         *project.Prj
 	View        *gtk.TreeView
 	Store       *gtk.TreeStore
 	Accel       *gtk.AccelGroup

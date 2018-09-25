@@ -17,7 +17,7 @@ func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 }
 
 func (ide *IDE) SelectFiles () {
-	elems := ide.getFiles(make ([]SelElem, 0, 100), ide.Prj.Tree)
+	elems := ide.getFiles(make ([]SelElem, 0, 100), ide.Prj.GetTree())
 	res := ide.Select(elems)
 	if res != nil {
 		log.Printf(">> OPEN LOC")

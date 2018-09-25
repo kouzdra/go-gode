@@ -70,7 +70,7 @@ func  (ide *IDE) fillTree (dirs [] project.Dir) {
 
 func (ide *IDE) LoadView () {
  	log.Printf ("Tree view loading ...")
-	ide.fillTree (ide.Prj.Tree)
+	ide.fillTree (ide.Prj.GetTree())
  	log.Printf ("... OK")
 }
 
