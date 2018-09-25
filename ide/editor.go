@@ -100,7 +100,7 @@ func (e *Editor) OnModify (notificationType uint, pos gsci.Pos, length uint, lin
 
 func (e *Editor) LoadFile (fName string) error {
 	e.FName = fName
-	if src, err := e.IDE.Prj.GetSrc (fName); err == nil {
+	if src, err := e.IDE.Project.GetSrc (fName); err == nil {
 		e.DoLock (func () {
 			e.Src = src
 			text := src.GetText ()
@@ -120,8 +120,8 @@ func (e *Editor) LoadFile (fName string) error {
 
 
 func (e *Editor) Fontify () {
-	if src, err := e.IDE.Prj.GetSrc (e.FName); err == nil {
-		es, f := e.IDE.Prj.Analyze (src, 0)
+	if src, err := e.IDE.Project.GetSrc (e.FName); err == nil {
+		es, f := e.IDE.Project.Analyze (src, 0)
 		log.Printf ("Fontify  %s", e.FName)
 		e.Sci.StyleClear ()
 		e.Sci.IndicClear (uint (INDIC_ERROR))

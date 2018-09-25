@@ -39,9 +39,9 @@ func  (ide *IDE) fillTree2 (dirs [] project.Dir, iter *gtk.TreeIter, ind string)
 			readable = name
 		}
 		ide.Store.Set(&subIter, ide.Icons.Dir.GPixbuf, readable, fPath)
-		sDirs := dir.Sub
+		sDirs := dir.GetSub()
 		subs = append (subs, func () { ide.fillTree2 (sDirs, &subIter, ind + "  ") } )
-		if pkg := ide.Prj.GetPackages() [dir.GetPath ()]; pkg != nil {
+		if pkg := ide.Project.GetPackages() [dir.GetPath ()]; pkg != nil {
 			for sPath, src := range pkg.GetSrcs () {
 				//log.Printf ("%s   >> add src: [%s | %s]\n", ind, sPath.Name, src.Dir)
 				var srcIter gtk.TreeIter
@@ -70,7 +70,7 @@ func  (ide *IDE) fillTree (dirs [] project.Dir) {
 
 func (ide *IDE) LoadView () {
  	log.Printf ("Tree view loading ...")
-	ide.fillTree (ide.Prj.GetTree())
+	ide.fillTree (ide.Project.GetTree())
  	log.Printf ("... OK")
 }
 
@@ -127,9 +127,9 @@ func (ide *IDE) MakeTree () {
 	
 func (ide *IDE) LoadProject () {
  	log.Printf ("Project loading ...")
-	ide.Prj = project.NewProject ()
-	ide.Prj.SetRoot (os.ExpandEnv("$GOROOT"))
-	ide.Prj.SetPath (os.ExpandEnv("$GOPATH"))
-	ide.Prj.Load ()
-	log.Printf ("Project loaded: #Dirs: %d", len (ide.Prj.GetDirs ()))
+	ide.Project = project.NewProject ()
+	ide.Project.SetRoot (os.ExpandEnv("$GOROOT"))
+	ide.Project.SetPath (os.ExpandEnv("$GOPATH"))
+	ide.Project.Load ()
+	log.Printf ("Project loaded: #Dirs: %d", len (ide.Project.GetDirs ()))
 }

@@ -21,7 +21,7 @@ type IDE struct {
 	Menubar     *gtk.MenuBar
 	StatusBar   *gtk.Statusbar
 	RED         gsci.Style
-	Prj         *project.Prj
+	Project     project.Project
 	View        *gtk.TreeView
 	Store       *gtk.TreeStore
 	Accel       *gtk.AccelGroup
@@ -96,8 +96,8 @@ func (ide *IDE) MakeErrorsList () {
 
 func (ide *IDE) ReadablePath (fname string) (string, bool) {
 	path := filepath.Clean(filepath.Dir(fname))
-	goroot := filepath.Clean(ide.Prj.Context.GOROOT)
-	gopath := filepath.Clean(ide.Prj.Context.GOPATH)
+	goroot := filepath.Clean(ide.Project.GetRoot().Name)
+	gopath := filepath.Clean(ide.Project.GetPath().Name)
 	//log.Printf("1: path=%s, ROOT=%s PATH=%s", path, goroot, gopath)
 	if strings.HasPrefix (path, goroot) {
 		return filepath.Join ("$GOROOT", strings.TrimPrefix (path, goroot)), true
