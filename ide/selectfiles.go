@@ -1,7 +1,7 @@
 package ide
 
 import "log"
-import project "github.com/kouzdra/go-analyzer/gproject"
+import project "github.com/kouzdra/go-analyzer/project/golang"
 
 func (ide *IDE) getFiles (elems []SelElem, dirs []project.Dir) []SelElem {
 	for _, dir := range dirs {
