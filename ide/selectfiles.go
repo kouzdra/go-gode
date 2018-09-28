@@ -1,14 +1,14 @@
 package ide
 
 import "log"
-import "github.com/kouzdra/go-analyzer/project/iface"
+import "github.com/kouzdra/go-analyzer/iface/iproject"
 
-func (ide *IDE) getFiles (elems []SelElem, dirs [] iface.Dir) []SelElem {
+func (ide *IDE) getFiles (elems []SelElem, dirs [] iproject.IDir) []SelElem {
 	for _, dir := range dirs {
 		if pkg := ide.Project.GetPackages() [dir.GetPath()]; pkg != nil {
 			for sPath, src := range pkg.GetSrcs () {
 				elems = append(elems, SelElem{
-					ide.Icons.File, sPath.Name, Loc{iface.FName (src), 0, 0}})
+					ide.Icons.File, sPath.Name, Loc{iproject.FName (src), 0, 0}})
 			}
 		}
 		elems = ide.getFiles(elems, dir.GetSub())

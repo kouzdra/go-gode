@@ -4,8 +4,8 @@ import "log"
 import "github.com/mattn/go-gtk/gdkpixbuf"
 import 	"github.com/mattn/go-gtk/glib"
 import 	"github.com/mattn/go-gtk/gtk"
-import  "github.com/kouzdra/go-analyzer/project/iface"
-import  "github.com/kouzdra/go-analyzer/project/golang"
+import  "github.com/kouzdra/go-analyzer/iface/iproject"
+import  "github.com/kouzdra/go-analyzer/golang/project"
 import 	"os"
 import 	"path"
 
@@ -24,7 +24,7 @@ var _ = log.Printf
 	}
 }*/
 
-func  (ide *IDE) fillTree2 (dirs [] iface.Dir, iter *gtk.TreeIter, ind string) {
+func  (ide *IDE) fillTree2 (dirs [] iproject.IDir, iter *gtk.TreeIter, ind string) {
 	subs := make ([]func (), 0, len(dirs))
 	for _, dir := range dirs {
 		var subIter gtk.TreeIter
@@ -56,7 +56,7 @@ func  (ide *IDE) fillTree2 (dirs [] iface.Dir, iter *gtk.TreeIter, ind string) {
 	}
 }
 
-func  (ide *IDE) fillTree (dirs [] iface.Dir) {
+func  (ide *IDE) fillTree (dirs [] iproject.IDir) {
 	//ide.printTree (dirs, "+++ ")
 	model := ide.View.GetModel ()
 	//model.Object.Ref ()
