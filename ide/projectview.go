@@ -5,7 +5,7 @@ import "github.com/mattn/go-gtk/gdkpixbuf"
 import 	"github.com/mattn/go-gtk/glib"
 import 	"github.com/mattn/go-gtk/gtk"
 import  "github.com/kouzdra/go-analyzer/iface/iproject"
-import  "github.com/kouzdra/go-analyzer/golang/project"
+import  golang "github.com/kouzdra/go-analyzer/golang/project"
 import 	"os"
 import 	"path"
 

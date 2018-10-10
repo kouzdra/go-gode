@@ -127,14 +127,14 @@ func (e *Editor) Fontify () {
 		e.Sci.IndicClear (uint (INDIC_ERROR))
 		for _, m := range f.Markers {
 			//log.Printf ("  %s at %d:%d\n", m.Color, m.Beg, m.End)
-			bg, en := gsci.Pos (m.Beg), gsci.Pos (m.End)
+			bg, en := gsci.Pos (m.Rng.Beg), gsci.Pos (m.Rng.End)
 			if f := faces.Faces [m.Color]; f != nil {
 				e.Sci.StyleRange (f.Style, bg, en)
 			}
 		}
 		for _, err := range es.Errors {
-			log.Printf ("  %s %s at %d:%d\n", err.Lvl, err.Msg, err.Beg, err.End)
-			e.Sci.IndicSetRange (uint (INDIC_ERROR), gsci.Pos (err.Beg), gsci.Pos (err.End))
+			log.Printf ("  %s %s at %d:%d\n", err.Lvl, err.Msg, err.Rng.Beg, err.Rng.End)
+			e.Sci.IndicSetRange (uint (INDIC_ERROR), gsci.Pos (err.Rng.Beg), gsci.Pos (err.Rng.End))
 		}
 		
 	} else {

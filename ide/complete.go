@@ -7,7 +7,7 @@ import (
 	//"github.com/mattn/go-gtk/gdk"
 	//"github.com/mattn/go-gtk/gtk"
 	//gsci "github.com/kouzdra/go-scintilla/gtk"
-	//"github.com/kouzdra/go-analyzer/project"
+	"github.com/kouzdra/go-analyzer/defs"
 	//"os"
 	//"fmt"
 	//"path"
@@ -27,7 +27,7 @@ func (ide *IDE) Complete () {
 			log.Printf ("Complete [%s] at %d, no SRC found\n", ed.FName, pos)
 		} else {
 			log.Printf ("Complete [%s|%s::%s] at %d\n", ed.FName, src.GetDir().Name, src.GetName().Name, pos)
-			if compl := ide.Project.Complete (src, int (pos)); compl == nil {
+			if compl := ide.Project.Complete (src, defs.Pos (pos)); compl == nil {
 				log.Printf ("    -- No completion context found\n")
 			} else if len (compl.Choices) == 0 {
 				log.Printf ("    -- No completions found\n")
